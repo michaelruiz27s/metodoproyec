@@ -9,18 +9,37 @@ import os
 
 
 biseccion_bp = Blueprint('biseccion', __name__)
-   
+
+
+def _texto_requerido(campo, etiqueta):
+    v = (request.form.get(campo) or "").strip()
+    if not v:
+        raise ValueError(f"Complete {etiqueta} (no puede estar vacío).")
+    return v
+
+
+def _float_requerido(campo, etiqueta):
+    s = _texto_requerido(campo, etiqueta)
+    try:
+        return float(s)
+    except ValueError as exc:
+        raise ValueError(f"{etiqueta} debe ser un número válido.") from exc
+
 
 @biseccion_bp.route('/biseccion', methods=['POST'])
 def ejecutar_biseccion():
     try:
-        funcion = request.form['funcion']
-        xa = float(request.form['xa'])
-        xb = float(request.form['xb'])
+        funcion = _texto_requerido("funcion", "la función f(x)")
+        xa = _float_requerido("xa", "X^a (límite inferior)")
+        xb = _float_requerido("xb", "X^b (límite superior)")
         xa_original = xa
         xb_original = xb
-        es = float(request.form['es'])
-        ejercicio = request.form['ejercicio']
+        es = _float_requerido("es", "Es% (tolerancia)")
+        ejercicio = _texto_requerido("ejercicio", "el número de ejercicio")
+        try:
+            int(ejercicio)
+        except ValueError as exc:
+            raise ValueError("Ejercicio debe ser un número entero.") from exc
         max_iter = 100
 
         def aplicar_reemplazos(s):
@@ -30,6 +49,11 @@ def ejecutar_biseccion():
             s = s.replace("log_ln_", "log")
             s = s.replace("sen", "sin")
             s = s.replace("^", "**")
+            # Soporta multiplicaciones implícitas comunes: 4x, 2(x+1), x(x-1), )(.
+            s = re.sub(r'(\d)([a-zA-Z\(])', r'\1*\2', s)
+            s = re.sub(r'([a-zA-Z\)])(\d)', r'\1*\2', s)
+            s = re.sub(r'([x\)])\(', r'\1*(', s)
+            s = re.sub(r'\)([a-zA-Zx])', r')*\1', s)
             s = re.sub(r'e\*\*(\(?[^\)\+\-\*/]+?\)?)', r'exp(\1)', s)
             return s
 
@@ -55,27 +79,26 @@ def ejecutar_biseccion():
         elif fXa * fXb > 0:
             raise ValueError("Bisección requiere un intervalo inicial con cambio de signo.")
 
-        while not resultados:
-            fXa = f(xa)
-            fXb = f(xb)
-            xr = (xa + xb) / 2
-            fXr = f(xr)
-            ea = 0 if i == 1 or xr == 0 else abs((xr - Xr_anterior) / xr) * 100
-            resultados.append((int(ejercicio), i, xa, xb, fXa, fXb, xr, fXr, round(ea, 4)))
+        if not resultados:
+            while i <= max_iter:
+                fXa = f(xa)
+                fXb = f(xb)
+                xr = (xa + xb) / 2
+                fXr = f(xr)
+                ea = 0 if i == 1 or xr == 0 else abs((xr - Xr_anterior) / xr) * 100
+                resultados.append((int(ejercicio), i, xa, xb, fXa, fXb, xr, fXr, round(ea, 4)))
 
-            if fXr == 0:
-                break
-            if ea < es and i > 1:
-                break
-            if i >= max_iter:
-                break
+                if fXr == 0:
+                    break
+                if ea < es and i > 1:
+                    break
 
-            Xr_anterior = xr
-            if fXa * fXr < 0:
-                xb = xr
-            else:
-                xa = xr
-            i += 1
+                Xr_anterior = xr
+                if fXa * fXr < 0:
+                    xb = xr
+                else:
+                    xa = xr
+                i += 1
 
         # Guardar resultados en MySQL
         conn = mysql.connector.connect(host="127.0.0.1", user="root", password="david98", database="metodos_numericos")
@@ -152,17 +175,17 @@ def ejecutar_biseccion():
             pio.write_html(fig, file=html_path, auto_open=False)
 
         except Exception as err:
-            print("❌ Error generando gráfica:", err)
+            print("Error generando grafica biseccion:", err)
             html_path = ""
 
 
         return jsonify({
-            "mensaje": "✅ Bisección guardada correctamente.",
-            "imagen": "/" + html_path
+            "mensaje": "Bisección guardada correctamente.",
+            "imagen": "/" + html_path if html_path else ""
         })
 
     except Exception as e:
-        return f"❌ Error: {str(e)}", 500
+        return jsonify({"error": str(e)}), 500
 
 
 @biseccion_bp.route('/resultados-biseccion')
@@ -194,21 +217,24 @@ def eliminar_biseccion(ejercicio):
         cursor.close()
         conn.close()
 
-        return "✅ Ejercicio eliminado correctamente."
+        return jsonify({"mensaje": "Ejercicio eliminado correctamente."})
     except Exception as e:
-        return f"❌ Error al eliminar: {str(e)}", 500
+        return jsonify({"error": f"Error al eliminar: {str(e)}"}), 500
 @biseccion_bp.route('/actualizar-biseccion', methods=['POST'])
 def actualizar_biseccion():
     try:
-        ejercicio = int(request.form['ejercicio'])
-
-        # Elimina registros antiguos
+        ej_s = (request.form.get("ejercicio") or "").strip()
+        if not ej_s:
+            return jsonify({"error": "Indique el número de ejercicio."}), 400
+        ejercicio = int(ej_s)
         conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM metodo_biseccion WHERE ejercicio = %s", (ejercicio,))
-        conn.commit()
+        cursor.execute("SELECT COUNT(*) FROM metodo_biseccion WHERE ejercicio = %s", (ejercicio,))
+        existe = cursor.fetchone()[0] > 0
         cursor.close()
         conn.close()
+        if not existe:
+            return jsonify({"error": f"No existe el ejercicio #{ejercicio}. Primero use Calcular."}), 404
 
         # Vuelve a ejecutar el cálculo
         request.form = request.form.copy()
@@ -216,8 +242,10 @@ def actualizar_biseccion():
 
         return ejecutar_biseccion()
 
+    except ValueError:
+        return jsonify({"error": "Ejercicio debe ser un número entero válido."}), 400
     except Exception as e:
-        return f"❌ Error al actualizar: {str(e)}", 500
+        return jsonify({"error": str(e)}), 500
 
 
 

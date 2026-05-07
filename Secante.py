@@ -1,262 +1,277 @@
 from flask import Blueprint, request, jsonify
 import math
 import re
+import os
 import mysql.connector
 import plotly.graph_objs as go
 import plotly.io as pio
 import numpy as np
-import os
-
-secante_bp = Blueprint('secante', __name__)
 
 
-@secante_bp.route('/secante', methods=['POST'])
+secante_bp = Blueprint("secante", __name__)
+MAX_ITER = 100
+
+
+def _db():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="david98",
+        database="metodos_numericos",
+    )
+
+
+def _asegurar_tabla():
+    conn = _db()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS metodo_secante (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            ejercicio INT NOT NULL,
+            iteracion INT NOT NULL,
+            xi_1 DOUBLE,
+            xi DOUBLE,
+            fxi_1 DOUBLE,
+            fxi DOUBLE,
+            xi_t DOUBLE,
+            ea DOUBLE
+        )
+        """
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def _campo_texto(nombre, etiqueta):
+    v = (request.form.get(nombre) or "").strip()
+    if not v:
+        raise ValueError(f"Complete {etiqueta}.")
+    return v
+
+
+def _campo_float(nombre, etiqueta):
+    raw = _campo_texto(nombre, etiqueta)
+    try:
+        return float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{etiqueta} debe ser un número válido.") from exc
+
+
+def _normalizar(expr: str) -> str:
+    s = (expr or "").strip().lower()
+    s = s.replace("−", "-").replace("–", "-").replace("—", "-")
+    s = s.replace("×", "*").replace("·", "*")
+    s = s.replace(" ", "")
+    s = s.replace("raiz", "sqrt")
+    s = s.replace("sen", "sin")
+    s = s.replace("^", "**")
+    s = s.replace("ln", "log")
+    s = re.sub(r"(\d)([a-zA-Z\(])", r"\1*\2", s)
+    s = re.sub(r"([a-zA-Z\)])(\d)", r"\1*\2", s)
+    s = re.sub(r"([x\)])\(", r"\1*(", s)
+    s = re.sub(r"\)([a-zA-Zx])", r")*\1", s)
+    return s
+
+
+def _compilar(expr: str, etiqueta: str):
+    codigo = compile(_normalizar(expr), f"<{etiqueta}>", "eval")
+    safe = {name: getattr(math, name) for name in dir(math) if not name.startswith("__")}
+
+    def f(x: float) -> float:
+        ctx = dict(safe)
+        ctx["x"] = x
+        val = eval(codigo, {"__builtins__": {}}, ctx)
+        if isinstance(val, complex):
+            if abs(val.imag) > 1e-10:
+                raise ValueError(f"{etiqueta} produjo un valor no real.")
+            val = val.real
+        val = float(val)
+        if not math.isfinite(val):
+            raise ValueError(f"{etiqueta} produjo un valor no finito.")
+        return val
+
+    return f
+
+
+def _iterar(ejercicio: int, f_expr: str, xi_1: float, xi: float, es: float):
+    f = _compilar(f_expr, "f(x)")
+    filas = []
+    actual_1 = xi_1
+    actual = xi
+
+    for it in range(1, MAX_ITER + 1):
+        f1 = f(actual_1)
+        f0 = f(actual)
+        denom = (f0 - f1)
+        if abs(denom) < 1e-14:
+            raise ValueError("División por cero: f(xi) - f(xi-1) es muy pequeño.")
+        xt = actual - f0 * (actual - actual_1) / denom
+        ea = 0.0 if it == 1 or xt == 0 else abs((xt - actual) / xt) * 100.0
+        filas.append((ejercicio, it, actual_1, actual, f1, f0, xt, round(ea, 4)))
+        if it > 1 and ea < es:
+            break
+        actual_1, actual = actual, xt
+    return filas
+
+
+def _guardar(ejercicio: int, filas):
+    conn = _db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM metodo_secante WHERE ejercicio = %s", (ejercicio,))
+    for fila in filas:
+        cur.execute(
+            """
+            INSERT INTO metodo_secante (ejercicio, iteracion, xi_1, xi, fxi_1, fxi, xi_t, ea)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            fila,
+        )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def _graficar(ejercicio: int, f_expr: str, filas):
+    f = _compilar(f_expr, "f(x)")
+    x0 = float(filas[0][2])
+    xs = np.linspace(x0 - 6.0, x0 + 6.0, 700)
+    x_plot, y_plot = [], []
+    for x in xs:
+        try:
+            y = f(float(x))
+        except Exception:
+            continue
+        x_plot.append(float(x))
+        y_plot.append(float(y))
+    if len(x_plot) < 2:
+        raise ValueError("No se pudo generar la gráfica para esta función en el rango actual.")
+
+    xr = float(filas[-1][6])
+    fig = go.Figure(
+        data=[
+            go.Scatter(x=x_plot, y=y_plot, mode="lines", name="f(x)", line=dict(color="#3b82f6")),
+            go.Scatter(x=[xr], y=[0], mode="markers", name="aprox. raíz", marker=dict(size=10, color="#10b981")),
+        ],
+        layout=go.Layout(
+            title="Gráfica del Método de la Secante",
+            xaxis=dict(title="x", showgrid=True, gridcolor="lightgray"),
+            yaxis=dict(title="f(x)", showgrid=True, gridcolor="lightgray"),
+            plot_bgcolor="white",
+            paper_bgcolor="white",
+        ),
+    )
+    os.makedirs("static/imagenes", exist_ok=True)
+    ruta = f"static/imagenes/secante_{ejercicio}.html"
+    pio.write_html(fig, file=ruta, auto_open=False)
+    return "/" + ruta
+
+
+@secante_bp.route("/secante", methods=["POST"])
 def ejecutar_secante():
     try:
-        funcion = request.form['funcion']
-        x_actual = float(request.form['x0'])
-        x_anterior = float(request.form['x1'])
-        es = float(request.form['es'])
-        ejercicio = request.form['ejercicio']
-        max_iter = 100
+        _asegurar_tabla()
+        ejercicio = int(_campo_texto("ejercicio", "el número de ejercicio"))
+        f_expr = _campo_texto("funcion", "la función f(x)")
+        xi_1 = _campo_float("xi_1", "Xi-1")
+        xi = _campo_float("xi", "Xi")
+        es = _campo_float("es", "Es%")
+        if es <= 0:
+            raise ValueError("Es% debe ser mayor que 0.")
 
-        def aplicar_reemplazos(f_str):
-            f_str = f_str.replace("sen", "sin")
-            f_str = f_str.replace("raiz", "sqrt")
-            f_str = f_str.replace("ln", "log_ln_")
-            f_str = f_str.replace("log(", "log10(")
-            f_str = f_str.replace("log_ln_", "log")
-            f_str = f_str.replace("arctan", "atan")
-            f_str = f_str.replace("arcsin", "asin")
-            f_str = f_str.replace("arccos", "acos")
-            f_str = f_str.replace("^", "**")
-            f_str = re.sub(r'e\*\*(\(?[^\)\+\-\*/]+?\)?)', r'exp(\1)', f_str)
-            return f_str
+        filas = _iterar(ejercicio, f_expr, xi_1, xi, es)
+        _guardar(ejercicio, filas)
 
-        funcion = aplicar_reemplazos(funcion)
-
-        allowed_names = {name: getattr(math, name) for name in dir(math) if not name.startswith("__")}
-        allowed_names["x"] = 0
-
-        def f(x):
-            allowed_names["x"] = x
-            return eval(funcion, {"__builtins__": None}, allowed_names)
-
-        resultados = []
-        i = 1
-
-        while i <= max_iter:
-            f_anterior = f(x_anterior)
-            f_actual = f(x_actual)
-
-            if (f_actual - f_anterior) == 0:
-                raise ValueError("Division por cero detectada durante el calculo.")
-
-            x_siguiente = x_actual - f_actual * (x_actual - x_anterior) / (f_actual - f_anterior)
-            ea = 0 if i == 1 else (abs((x_siguiente - x_actual) / x_siguiente) * 100 if x_siguiente != 0 else 0)
-
-            resultados.append((
-                int(ejercicio), i, x_actual, x_anterior, f_actual, f_anterior, x_siguiente, round(ea, 6)
-            ))
-
-            if ea < es and i > 1:
-                break
-
-            x_anterior = x_actual
-            x_actual = x_siguiente
-            i += 1
-
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM metodo_secante WHERE ejercicio = %s", (ejercicio,))
-        for fila in resultados:
-            cursor.execute(
-                """
-                INSERT INTO metodo_secante
-                (ejercicio, iteracion, xi, xi_1, fxi, fxi_1, xi_t, ea)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                fila
-            )
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
+        imagen = ""
         try:
-            x_actual_original = float(request.form['x0'])
-            x_anterior_original = float(request.form['x1'])
-            f_anterior_original = f(x_anterior_original)
-            f_actual_original = f(x_actual_original)
-            x2_geo = x_actual_original - f_actual_original * (x_actual_original - x_anterior_original) / (f_actual_original - f_anterior_original)
-
-            x_vals = np.linspace(-2000, 2000, 20000)
-            x_vals_filtrados = []
-            y_vals_filtrados = []
-
-            for x in x_vals:
-                try:
-                    y = f(x)
-                    x_vals_filtrados.append(x)
-                    y_vals_filtrados.append(y if math.isfinite(y) else None)
-                except Exception:
-                    x_vals_filtrados.append(x)
-                    y_vals_filtrados.append(None)
-
-            trace_func = go.Scatter(
-                x=x_vals_filtrados,
-                y=y_vals_filtrados,
-                mode='lines',
-                name=f"f(x) = {funcion}",
-                line=dict(color='blue')
-            )
-            trace_A = go.Scatter(
-                x=[x_anterior_original],
-                y=[f(x_anterior_original)],
-                mode='markers',
-                name=f"A = ({x_anterior_original:.2f}, {f(x_anterior_original):.3f})",
-                marker=dict(color='red', size=10),
-                text=['x(i-1)'],
-                textposition="top center"
-            )
-            trace_B = go.Scatter(
-                x=[x_actual_original],
-                y=[f(x_actual_original)],
-                mode='markers',
-                name=f"B = ({x_actual_original:.2f}, {f(x_actual_original):.3f})",
-                marker=dict(color='green', size=10),
-                text=['x(i)'],
-                textposition="top center"
-            )
-            trace_C = go.Scatter(
-                x=[x2_geo],
-                y=[f(x2_geo)],
-                mode='markers',
-                name=f"C = ({x2_geo:.2f})",
-                marker=dict(color='orange', size=10),
-                text=['x(i+1)'],
-                textposition="top center"
-            )
-
-            layout = go.Layout(
-                title='Grafica del Metodo de la Secante',
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                xaxis=dict(
-                    title='x',
-                    range=[-10, 10],
-                    showgrid=True,
-                    gridcolor='lightgray',
-                    zeroline=True,
-                    zerolinecolor='black',
-                    zerolinewidth=2
-                ),
-                yaxis=dict(
-                    title='f(x)',
-                    range=[-10, 10],
-                    showgrid=True,
-                    gridcolor='lightgray',
-                    zeroline=True,
-                    zerolinecolor='black',
-                    zerolinewidth=2
-                ),
-                shapes=[
-                    dict(type='line', x0=0, y0=-1000, x1=0, y1=1000, line=dict(color='black', width=2)),
-                    dict(type='line', x0=-1000, y0=0, x1=1000, y1=0, line=dict(color='black', width=2))
-                ],
-                showlegend=True,
-                hovermode='closest'
-            )
-
-            fig = go.Figure(data=[trace_func, trace_A, trace_B, trace_C], layout=layout)
-            os.makedirs("static/imagenes", exist_ok=True)
-            html_path = f"static/imagenes/secante_{ejercicio}.html"
-            pio.write_html(fig, file=html_path, auto_open=False)
-        except Exception as err:
-            print("Error generando grafica Secante:", err)
-            html_path = ""
-
-        return jsonify({
-            "mensaje": "Calculos de la secante realizados y guardados correctamente.",
-            "imagen": "/" + html_path
-        })
-
-    except Exception as err:
-        return jsonify({"error": str(err)}), 500
+            imagen = _graficar(ejercicio, f_expr, filas)
+        except Exception:
+            imagen = ""
+        return jsonify({"mensaje": "Secante guardado correctamente.", "imagen": imagen})
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-@secante_bp.route('/resultados-secante')
-def ver_resultados_secante():
+@secante_bp.route("/resultados-secante")
+def resultados_secante():
     try:
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
-        cursor = conn.cursor()
-        cursor.execute(
+        _asegurar_tabla()
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute(
             """
-            SELECT ejercicio, iteracion, xi, xi_1, fxi, fxi_1, xi_t, ea
+            SELECT ejercicio, iteracion, xi_1, xi, fxi_1, fxi, xi_t, ea
             FROM metodo_secante
             ORDER BY ejercicio ASC, iteracion ASC
             """
         )
-
-        filas = cursor.fetchall()
-        cursor.close()
+        filas = cur.fetchall()
+        cur.close()
         conn.close()
         return jsonify(filas)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@secante_bp.route('/eliminar-secante/<int:ejercicio>', methods=['DELETE'])
-def eliminar_secante(ejercicio):
-    try:
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM metodo_secante WHERE ejercicio = %s", (ejercicio,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return f"Registros del ejercicio #{ejercicio} eliminados correctamente."
-    except Exception as e:
-        return f"Error: {str(e)}", 500
-
-
-@secante_bp.route('/actualizar-secante', methods=['POST'])
-def actualizar_secante():
-    ejercicio = int(request.form['ejercicio'])
-
-    conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM metodo_secante WHERE ejercicio = %s", (ejercicio,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    request.form = request.form.copy()
-    request.form['ejercicio'] = str(ejercicio)
-
-    return ejecutar_secante()
-
-
-@secante_bp.route('/buscar_ejercicio_secante/<int:ejercicio>', methods=['GET'])
+@secante_bp.route("/buscar_ejercicio_secante/<int:ejercicio>", methods=["GET"])
 def buscar_ejercicio_secante(ejercicio):
     try:
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
-        cursor = conn.cursor(dictionary=True)
-
-        cursor.execute(
+        _asegurar_tabla()
+        conn = _db()
+        cur = conn.cursor(dictionary=True)
+        cur.execute(
             """
-            SELECT ejercicio, iteracion, xi, xi_1, fxi, fxi_1, xi_t, ea
+            SELECT ejercicio, iteracion, xi_1, xi, fxi_1, fxi, xi_t, ea
             FROM metodo_secante
             WHERE ejercicio = %s
             ORDER BY iteracion ASC
             """,
-            (ejercicio,)
+            (ejercicio,),
         )
-
-        resultados = cursor.fetchall()
-        cursor.close()
+        filas = cur.fetchall()
+        cur.close()
         conn.close()
-
-        return jsonify(resultados)
+        return jsonify(filas)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@secante_bp.route("/eliminar-secante/<int:ejercicio>", methods=["DELETE"])
+def eliminar_secante(ejercicio):
+    try:
+        _asegurar_tabla()
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM metodo_secante WHERE ejercicio = %s", (ejercicio,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify({"mensaje": f"Registros del ejercicio #{ejercicio} eliminados correctamente."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@secante_bp.route("/actualizar-secante", methods=["POST"])
+def actualizar_secante():
+    try:
+        _asegurar_tabla()
+        ejercicio = int(_campo_texto("ejercicio", "el número de ejercicio"))
+        conn = _db()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM metodo_secante WHERE ejercicio = %s", (ejercicio,))
+        existe = cur.fetchone()[0] > 0
+        cur.close()
+        conn.close()
+        if not existe:
+            return jsonify({"error": f"No existe el ejercicio #{ejercicio}. Primero use Calcular."}), 404
+        request.form = request.form.copy()
+        request.form["ejercicio"] = str(ejercicio)
+        return ejecutar_secante()
+    except ValueError:
+        return jsonify({"error": "Ejercicio debe ser un número entero válido."}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

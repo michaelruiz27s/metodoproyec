@@ -36,6 +36,10 @@ def ejecutar_falsa_posicion():
             s = s.replace("arcsin", "asin")
             s = s.replace("arccos", "acos")
             s = s.replace("^", "**")
+            s = re.sub(r'(\d)([a-zA-Z\(])', r'\1*\2', s)
+            s = re.sub(r'([a-zA-Z\)])(\d)', r'\1*\2', s)
+            s = re.sub(r'([x\)])\(', r'\1*(', s)
+            s = re.sub(r'\)([a-zA-Zx])', r')*\1', s)
             s = re.sub(r'e\*\*(\(?[^\)\+\-\*/]+?\)?)', r'exp(\1)', s)
             return s
 
@@ -61,32 +65,31 @@ def ejecutar_falsa_posicion():
         elif fXa * fXb > 0:
             raise ValueError("Falsa posición requiere un intervalo inicial con cambio de signo.")
 
-        while not resultados:
-            fXa = f(xa)
-            fXb = f(xb)
+        if not resultados:
+            while i <= max_iter:
+                fXa = f(xa)
+                fXb = f(xb)
 
-            if abs(fXa - fXb) < 1e-12:
-                raise ValueError("División por cero detectada durante el cálculo de Xr.")
+                if abs(fXa - fXb) < 1e-12:
+                    raise ValueError("División por cero detectada durante el cálculo de Xr.")
 
-            xr = xb - (fXb * (xa - xb)) / (fXa - fXb)
-            fXr = f(xr)
+                xr = xb - (fXb * (xa - xb)) / (fXa - fXb)
+                fXr = f(xr)
 
-            ea = 0 if i == 1 or xr == 0 else abs((xr - Xr_anterior) / xr) * 100
-            resultados.append((int(ejercicio), i, xa, xb, fXa, fXb, xr, fXr, round(ea, 4)))
+                ea = 0 if i == 1 or xr == 0 else abs((xr - Xr_anterior) / xr) * 100
+                resultados.append((int(ejercicio), i, xa, xb, fXa, fXb, xr, fXr, round(ea, 4)))
 
-            if fXr == 0:
-                break
-            if ea < es and i > 1:
-                break
-            if i >= max_iter:
-                break
+                if fXr == 0:
+                    break
+                if ea < es and i > 1:
+                    break
 
-            Xr_anterior = xr
-            if fXa * fXr < 0:
-                xb = xr
-            else:
-                xa = xr
-            i += 1
+                Xr_anterior = xr
+                if fXa * fXr < 0:
+                    xb = xr
+                else:
+                    xa = xr
+                i += 1
 
         conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
         cursor = conn.cursor()
@@ -157,16 +160,18 @@ def ejecutar_falsa_posicion():
             pio.write_html(fig, file=html_path, auto_open=False)
 
         except Exception as err:
-            print("❌ Error generando gráfica Falsa Posición:", err)
+            print("Error generando gráfica de falsa posición:", err)
             html_path = ""
 
         return jsonify({
-            "mensaje": "✅ Cálculos de falsa posición realizados y guardados correctamente.",
-            "imagen": "/" + html_path
+            "mensaje": "Cálculo de falsa posición guardado correctamente.",
+            "imagen": "/" + html_path if html_path else ""
         })
 
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return f"❌ Error: {str(e)}", 500
+        return jsonify({"error": str(e)}), 500
 
 
 
@@ -197,25 +202,35 @@ def eliminar_falsa_posicion(ejercicio):
         conn.commit()
         cursor.close()
         conn.close()
-        return f"Registros del ejercicio #{ejercicio} eliminados correctamente."
+        return jsonify({"mensaje": f"Registros del ejercicio #{ejercicio} eliminados correctamente."})
     except Exception as e:
-        return f"❌ Error: {str(e)}", 500
+        return jsonify({"error": str(e)}), 500
 
 @falsa_bp.route('/actualizar-falsa-posicion', methods=['POST'])
 def actualizar_falsa_posicion():
-    ejercicio = int(request.form['ejercicio'])
+    try:
+        ej_s = (request.form.get("ejercicio") or "").strip()
+        if not ej_s:
+            return jsonify({"error": "Indique el número de ejercicio."}), 400
+        ejercicio = int(ej_s)
 
-    conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM metodo_falsa_posicion WHERE ejercicio = %s", (ejercicio,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM metodo_falsa_posicion WHERE ejercicio = %s", (ejercicio,))
+        existe = cursor.fetchone()[0] > 0
+        cursor.close()
+        conn.close()
+        if not existe:
+            return jsonify({"error": f"No existe el ejercicio #{ejercicio}. Primero use Calcular."}), 404
 
-    request.form = request.form.copy()
-    request.form['ejercicio'] = str(ejercicio)
+        request.form = request.form.copy()
+        request.form['ejercicio'] = str(ejercicio)
+        return ejecutar_falsa_posicion()
 
-    return ejecutar_falsa_posicion()
+    except ValueError:
+        return jsonify({"error": "Ejercicio debe ser un número entero válido."}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 @falsa_bp.route('/buscar_ejercicio_falsa/<int:ejercicio>', methods=['GET'])
 def buscar_ejercicio_falsa(ejercicio):

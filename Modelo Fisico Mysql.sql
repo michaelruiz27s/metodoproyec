@@ -1,50 +1,59 @@
--- Se crea la base de datos
-Create Database IF Not Exists Metodos_Numericos;
+-- Esquema alineado con la app actual (Bisección, Falsa Posición y Punto Fijo).
+-- Incluye Newton-Raphson (clásico/modificado/derivada numérica) en una sola tabla con campo tipo.
+-- Incluye Secante, Müller, Newton para sistemas (3 variables) y Bairstow.
+-- Base de datos: metodos_numericos (ajusta el nombre si usas otro).
 
-Use Metodos_Numericos
--- Se crea la tabla Metodo_Bisección
-Create TABLE metodo_biseccion (
+CREATE DATABASE IF NOT EXISTS metodos_numericos;
+USE metodos_numericos;
+
+CREATE TABLE IF NOT EXISTS metodo_biseccion (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    ejercicio int,
+    ejercicio INT,
     iteracion INT,
-   xa double,
-    xb double,
-    fxa double,
-    fxb double,
-    xr double,
-    fxr double,
-    ea double
+    xa DOUBLE,
+    xb DOUBLE,
+    fxa DOUBLE,
+    fxb DOUBLE,
+    xr DOUBLE,
+    fxr DOUBLE,
+    ea DOUBLE
 );
-CREATE TABLE metodo_falsa_posicion (
+
+CREATE TABLE IF NOT EXISTS metodo_falsa_posicion (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Ejercicio INT NOT NULL,
     Iteracion INT NOT NULL,
-    Xa double,
-    Xb double,
-    FXa double,
-    FXb double,
-    Xr double,
-    FXr double,
-    Ea double
+    Xa DOUBLE,
+    Xb DOUBLE,
+    FXa DOUBLE,
+    FXb DOUBLE,
+    Xr DOUBLE,
+    FXr DOUBLE,
+    Ea DOUBLE
 );
-Create table metodo_punto_fijo(
-	Id INT AUTO_INCREMENT PRIMARY KEY,
-    Ejercicio INT NOT NULL,
-    Iteracion INT NOT NULL,
-    Xi double,
-    GXi double,
-    Ea double
-    );
-CREATE TABLE metodo_newton_raphson (
-    ejercicio INT,
-    iteracion INT,
+
+CREATE TABLE IF NOT EXISTS metodo_punto_fijo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejercicio INT NOT NULL,
+    iteracion INT NOT NULL,
+    xi DOUBLE,
+    gxi DOUBLE,
+    ea DOUBLE
+);
+
+CREATE TABLE IF NOT EXISTS metodo_newton_raphson (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejercicio INT NOT NULL,
+    tipo VARCHAR(16) NOT NULL,
+    iteracion INT NOT NULL,
     xi DOUBLE,
     fxi DOUBLE,
     dfxi DOUBLE,
     xi1 DOUBLE,
     ea DOUBLE
 );
-CREATE TABLE metodo_secante (
+
+CREATE TABLE IF NOT EXISTS metodo_secante (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ejercicio INT NOT NULL,
     iteracion INT NOT NULL,
@@ -55,7 +64,8 @@ CREATE TABLE metodo_secante (
     xi_t DOUBLE,
     ea DOUBLE
 );
-CREATE TABLE metodo_muller (
+
+CREATE TABLE IF NOT EXISTS metodo_muller (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ejercicio INT NOT NULL,
     iteracion INT NOT NULL,
@@ -66,64 +76,29 @@ CREATE TABLE metodo_muller (
     fx3 DOUBLE,
     ea DOUBLE
 );
-CREATE TABLE metodo_newton_sistemas (
+
+CREATE TABLE IF NOT EXISTS metodo_newton_sistemas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ejercicio INT NOT NULL,
     iteracion INT NOT NULL,
-    
-    -- Valores de X
     x DOUBLE,
     y DOUBLE,
     z DOUBLE,
-
-    -- Valores de F(X)
     fx DOUBLE,
     fy DOUBLE,
     fz DOUBLE,
-
-    -- Jacobiano
-    j11 DOUBLE,
-    j12 DOUBLE,
-    j13 DOUBLE,
-    j21 DOUBLE,
-    j22 DOUBLE,
-    j23 DOUBLE,
-    j31 DOUBLE,
-    j32 DOUBLE,
-    j33 DOUBLE,
-
-    -- Inversa de Jacobiano
-    inv_j11 DOUBLE,
-    inv_j12 DOUBLE,
-    inv_j21 DOUBLE,
-    inv_j22 DOUBLE,
-
-    -- Delta X
-    delta_x DOUBLE,
-    delta_y DOUBLE,
-    delta_z DOUBLE,
-
-    -- Error
-    e1 DOUBLE,
-    e2 DOUBLE,
-    e3 DOUBLE
+    ex DOUBLE,
+    ey DOUBLE,
+    ez DOUBLE
 );
 
-CREATE TABLE metodo_muller (
+CREATE TABLE IF NOT EXISTS metodo_bairstow (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ejercicio INT NOT NULL,
     iteracion INT NOT NULL,
-    x0 DOUBLE,
-    x1 DOUBLE,
-    x2 DOUBLE,
-    x3 DOUBLE,
-    fx3 DOUBLE,
+    r DOUBLE,
+    s DOUBLE,
+    dr DOUBLE,
+    ds DOUBLE,
     ea DOUBLE
 );
-
-
-
-
-
-Drop table metodo_newton_sistemas
-DROP DATABASE Metodos_Numericos;

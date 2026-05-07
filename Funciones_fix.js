@@ -1,73 +1,77 @@
-// Correcciones de exportación y gráficas para métodos numéricos
+// Exportación Excel (fallback si XLSX falla) — Bisección, Falsa Posición y Punto Fijo
 (function () {
-  function renderizarTablaSenl(data) {
-    const tabla = document.getElementById('tabla-resultados-newton-sistemas')?.getElementsByTagName('tbody')[0];
-    if (!tabla) return;
-    tabla.innerHTML = '';
-    data.forEach(fila => {
-      const nuevaFila = tabla.insertRow();
-      fila.forEach(valor => {
-        const celda = nuevaFila.insertCell();
-        celda.textContent = valor;
-      });
-    });
+  function avisar(mensaje, tipo) {
+    if (typeof window.mostrarNotificacion === 'function') {
+      window.mostrarNotificacion(mensaje, tipo || 'info');
+    } else {
+      alert(mensaje);
+    }
   }
 
-  window.actualizarSelectSenl = function (dataExistente) {
-    const procesar = (data) => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
-      const select = document.getElementById('ejercicioSelectSenl');
-      const iframe = document.getElementById('grafica-interactiva-senl');
-      if (!select || !iframe) return;
+  function normalizarFilas(filas) {
+    if (!Array.isArray(filas)) return [];
+    return filas.map(fila => Array.isArray(fila) ? fila : Object.values(fila));
+  }
 
-      select.innerHTML = '';
-      ejerciciosUnicos.forEach(ej => {
-        const option = document.createElement('option');
-        option.value = ej;
-        option.textContent = `Ejercicio ${ej}`;
-        select.appendChild(option);
-      });
+  function generarMatrizConEncabezados(tablaId, filas) {
+    const tabla = document.getElementById(tablaId);
+    if (!tabla) return [];
 
-      if (ejerciciosUnicos.length > 0) {
-        select.value = ejerciciosUnicos[ejerciciosUnicos.length - 1];
-        window.cargarGraficaSenl();
-      } else {
-        iframe.src = '';
-      }
-    };
+    const headers = Array.from(tabla.querySelectorAll('thead th'))
+      .map(th => th.innerText.trim());
+    const data = normalizarFilas(filas);
+    return [headers, ...data];
+  }
 
-    if (Array.isArray(dataExistente)) {
-      procesar(dataExistente);
-      return;
+  async function obtenerDatosCompletos() {
+    const [resBiseccion, resFalsa, resPuntoFijo, resNewtonCla, resNewtonMod, resNewtonNum, resNewtonSis, resSecante, resMuller, resBairstow] = await Promise.all([
+      fetch('/resultados-biseccion'),
+      fetch('/resultados-falsa-posicion'),
+      fetch('/resultados-punto-fijo'),
+      fetch('/resultados-newton/CLA'),
+      fetch('/resultados-newton/MOD'),
+      fetch('/resultados-newton/NUM'),
+      fetch('/resultados-newton-sistemas'),
+      fetch('/resultados-secante'),
+      fetch('/resultados-muller'),
+      fetch('/resultados-bairstow')
+    ]);
+
+    if (!resBiseccion.ok || !resFalsa.ok || !resPuntoFijo.ok || !resNewtonCla.ok || !resNewtonMod.ok || !resNewtonNum.ok || !resNewtonSis.ok || !resSecante.ok || !resMuller.ok || !resBairstow.ok) {
+      throw new Error('No se pudieron consultar los datos almacenados.');
     }
 
-    fetch('/resultados-newton-senl')
-      .then(res => res.json())
-      .then(procesar)
-      .catch(error => console.error('Error cargando select de SENL:', error));
-  };
+    const [biseccion, falsa, puntoFijo, newtonCla, newtonMod, newtonNum, newtonSis, secante, muller, bairstow] = await Promise.all([
+      resBiseccion.json(),
+      resFalsa.json(),
+      resPuntoFijo.json(),
+      resNewtonCla.json(),
+      resNewtonMod.json(),
+      resNewtonNum.json(),
+      resNewtonSis.json(),
+      resSecante.json(),
+      resMuller.json(),
+      resBairstow.json()
+    ]);
 
-  window.cargarGraficaSenl = function () {
-    const select = document.getElementById('ejercicioSelectSenl');
-    const iframe = document.getElementById('grafica-interactiva-senl');
-    if (!select || !iframe || !select.value) return;
-    iframe.src = `/static/imagenes/newton_senl_${select.value}.html?t=${Date.now()}`;
-  };
-
-  window.cargarResultadosSenl = function () {
-    fetch('http://127.0.0.1:5000/resultados-newton-senl')
-      .then(response => response.json())
-      .then(data => {
-        renderizarTablaSenl(data);
-        window.actualizarSelectSenl(data);
-      })
-      .catch(error => console.error('Error cargando resultados SENL:', error));
-  };
+    return {
+      biseccion: normalizarFilas(biseccion),
+      falsa: normalizarFilas(falsa),
+      puntoFijo: normalizarFilas(puntoFijo),
+      newtonCla: normalizarFilas(newtonCla),
+      newtonMod: normalizarFilas(newtonMod),
+      newtonNum: normalizarFilas(newtonNum),
+      newtonSis: normalizarFilas(newtonSis),
+      secante: normalizarFilas(secante),
+      muller: normalizarFilas(muller),
+      bairstow: normalizarFilas(bairstow)
+    };
+  }
 
   window.exportarTabla = function (idTabla, nombreArchivo, nombreHoja) {
     const tabla = document.getElementById(idTabla);
     if (!tabla) {
-      alert('No se encontró la tabla a exportar.');
+      avisar('No se encontró la tabla a exportar.', 'warning');
       return;
     }
 
@@ -88,34 +92,98 @@
     URL.revokeObjectURL(link.href);
   };
 
-  window.exportarTodo = function () {
-    const tablas = [
-      { id: 'tabla-resultados', nombre: 'Biseccion' },
-      { id: 'tabla-resultados-falsa', nombre: 'FalsaPosicion' },
-      { id: 'tabla-resultados-puntofijo', nombre: 'PuntoFijo' },
-      { id: 'tabla-resultados-newton', nombre: 'NewtonRaphson' },
-      { id: 'tabla-resultados-secante', nombre: 'Secante' },
-      { id: 'tabla-resultados-muller', nombre: 'Muller' },
-      { id: 'tabla-resultados-newton-sistemas', nombre: 'NR SENL' }
+  window.exportarTodo = async function () {
+    let datos;
+    try {
+      datos = await obtenerDatosCompletos();
+    } catch (error) {
+      avisar(error.message || 'No se pudo exportar el Excel completo.', 'error');
+      return;
+    }
+
+    const hojas = [
+      {
+        id: 'tabla-resultados',
+        nombre: 'Biseccion',
+        filas: datos.biseccion
+      },
+      {
+        id: 'tabla-resultados-falsa',
+        nombre: 'FalsaPosicion',
+        filas: datos.falsa
+      },
+      {
+        id: 'tabla-resultados-puntofijo',
+        nombre: 'PuntoFijo',
+        filas: datos.puntoFijo
+      },
+      {
+        id: 'tabla-resultados-newton',
+        nombre: 'Newton_CLA',
+        filas: datos.newtonCla
+      },
+      {
+        id: 'tabla-resultados-newton',
+        nombre: 'Newton_MOD',
+        filas: datos.newtonMod
+      },
+      {
+        id: 'tabla-resultados-newton',
+        nombre: 'Newton_NUM',
+        filas: datos.newtonNum
+      },
+      {
+        id: 'tabla-resultados-newton-sistemas',
+        nombre: 'Newton_Sistemas',
+        filas: datos.newtonSis
+      },
+      {
+        id: 'tabla-resultados-secante',
+        nombre: 'Secante',
+        filas: datos.secante
+      },
+      {
+        id: 'tabla-resultados-muller',
+        nombre: 'Muller',
+        filas: datos.muller
+      },
+      {
+        id: 'tabla-resultados-bairstow',
+        nombre: 'Bairstow',
+        filas: datos.bairstow
+      }
     ];
 
     if (window.XLSX && XLSX.utils) {
       const wb = XLSX.utils.book_new();
-      tablas.forEach(tablaInfo => {
-        const tabla = document.getElementById(tablaInfo.id);
-        if (!tabla) return;
-        const ws = XLSX.utils.table_to_sheet(tabla);
-        XLSX.utils.book_append_sheet(wb, ws, tablaInfo.nombre);
+      hojas.forEach(({ id, nombre, filas }) => {
+        const matriz = generarMatrizConEncabezados(id, filas);
+        if (matriz.length === 0) return;
+        const ws = XLSX.utils.aoa_to_sheet(matriz);
+        XLSX.utils.book_append_sheet(wb, ws, nombre);
       });
       XLSX.writeFile(wb, 'metodos_numericos_completo.xlsx');
       return;
     }
 
     let contenido = '\ufeff<html><head><meta charset="UTF-8"></head><body>';
-    tablas.forEach(tablaInfo => {
-      const tabla = document.getElementById(tablaInfo.id);
-      if (tabla) {
-        contenido += `<h2>${tablaInfo.nombre}</h2>${tabla.outerHTML}<br/>`;
+    hojas.forEach(({ id, nombre, filas }) => {
+      const matriz = generarMatrizConEncabezados(id, filas);
+      if (matriz.length > 0) {
+        const [headers, ...rows] = matriz;
+        contenido += `<h2>${nombre}</h2><table border="1"><thead><tr>`;
+        headers.forEach(h => {
+          contenido += `<th>${h}</th>`;
+        });
+        contenido += '</tr></thead><tbody>';
+        rows.forEach(row => {
+          contenido += '<tr>';
+          row.forEach(value => {
+            contenido += `<td>${value ?? ''}</td>`;
+          });
+          contenido += '</tr>';
+        });
+        contenido += '</tbody></table><br/>';
       }
     });
     contenido += '</body></html>';
@@ -129,31 +197,4 @@
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
   };
-
-  const formSenl = document.querySelector('form[action="http://127.0.0.1:5000/newton-senl"]');
-  if (formSenl) {
-    formSenl.addEventListener('submit', function (event) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-
-      const formData = new FormData(formSenl);
-      fetch('http://127.0.0.1:5000/newton-senl', {
-        method: 'POST',
-        body: formData
-      })
-        .then(async response => {
-          const payload = await response.json();
-          if (!response.ok) throw new Error(payload.error || 'Error en Newton-SENL.');
-          return payload;
-        })
-        .then(data => {
-          alert(data.mensaje || 'Calculo completado.');
-          window.cargarResultadosSenl();
-        })
-        .catch(error => {
-          console.error('Error SENL:', error);
-          alert('No se pudo calcular SENL: ' + error.message);
-        });
-    }, true);
-  }
 })();

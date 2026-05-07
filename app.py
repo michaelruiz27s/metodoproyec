@@ -1,11 +1,12 @@
 from flask import Flask, send_file, send_from_directory
 from Biseccion import biseccion_bp
 from Falsa_Posicion import falsa_bp
-from Punto_Fijo import puntofijo_bp
+from Punto_Fijo import punto_fijo_bp
 from Newton_Raphson import newton_bp
-from Secante import secante_bp   
+from Secante import secante_bp
 from Muller import muller_bp
-from Newton_Raphson_SENL import newton_senl_bp
+from Newton_Sistemas import newton_sis_bp
+from Bairstow import bairstow_bp
 
 
 app = Flask(__name__)
@@ -30,13 +31,12 @@ def funciones_fix():
 # Registrar blueprints
 app.register_blueprint(biseccion_bp)
 app.register_blueprint(falsa_bp)
-app.register_blueprint(puntofijo_bp)
+app.register_blueprint(punto_fijo_bp)
 app.register_blueprint(newton_bp)
-app.register_blueprint(secante_bp)   # <-- ✅ Registramos el Blueprint de Secante
+app.register_blueprint(secante_bp)
 app.register_blueprint(muller_bp)
-app.register_blueprint(newton_senl_bp)
-
-
+app.register_blueprint(newton_sis_bp)
+app.register_blueprint(bairstow_bp)
 
 
 if __name__ == '__main__':
