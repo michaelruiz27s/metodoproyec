@@ -1,619 +1,712 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="https://images.vexels.com/media/users/3/135555/isolated/preview/b45edb6f6eee6d71bcc54eb911e54f3b-icono-de-numeros-de-calculadora.png" type="image/png">
+  <link rel="icon"
+    href="https://images.vexels.com/media/users/3/135555/isolated/preview/b45edb6f6eee6d71bcc54eb911e54f3b-icono-de-numeros-de-calculadora.png"
+    type="image/png">
   <title>Métodos Numéricos</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>  
-    <div class="sidebar">
-        <div class="logo">Menu</div>
-      
-        <div class="menu-wrapper">
-          <div class="menu-section">
-          </div>
-          <div class="menu-section">
-            <button class="menu-button" onclick="toggleSubmenu('cerrados')">Métodos Cerrados</button>
-            <div class="submenu" id="cerrados">
-              <a href="#biseccion">Método Bisección</a>
-              <a href="#falsa">Método Falsa Posición</a>
-            </div>
-          </div>
-      
-          <div class="menu-section">
-            <button class="menu-button" onclick="toggleSubmenu('abiertos')">Métodos Abiertos</button>
-            <div class="submenu" id="abiertos">
-              <a href="#puntofijo">Método Punto Fijo</a>
-              <a href="#newton">Método Newton Raphson</a>
-              <a href="#secante">Método Secante</a>
-            </div>
-          </div>
-      
-          <div class="menu-section">
-            <a class="submenu-link" href="#newton-senl">Newton-Raphson Sistemas</a>
-          </div>
 
-          <div class="menu-section">
-            <a class="submenu-link" href="#muller">Método de Müller</a>
-          </div>
+<body>
+  <div class="sidebar">
+    <div class="logo">Menu</div>
+
+    <div class="menu-wrapper">
+      <div class="menu-section">
+      </div>
+      <div class="menu-section">
+        <button class="menu-button" onclick="toggleSubmenu('cerrados')">Métodos Cerrados</button>
+        <div class="submenu" id="cerrados">
+          <a href="#biseccion">Método Bisección</a>
+          <a href="#falsa">Método Falsa Posición</a>
         </div>
       </div>
 
-<div class="main-content">
-  
-    <hr class="linea-seccion">
-    
-  <section id="biseccion" class="biseccion-scroll-section">
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Metodo de Bisección
+      <div class="menu-section">
+        <button class="menu-button" onclick="toggleSubmenu('abiertos')">Métodos Abiertos</button>
+        <div class="submenu" id="abiertos">
+          <a href="#puntofijo">Método Punto Fijo</a>
+          <a href="#newton">Método Newton Raphson</a>
+          <a href="#secante">Método Secante</a>
+        </div>
+      </div>
+
+      <div class="menu-section">
+        <a class="submenu-link" href="#newton-senl">Newton-Raphson Sistemas</a>
+      </div>
+
+      <div class="menu-section">
+        <a class="submenu-link" href="#muller">Método de Müller</a>
+      </div>
+      <div class="menu-section">
+        <a class="submenu-link" href="#horner">Método de Horner</a>
+      </div>
     </div>
-    <div class="contenido-scroll">
-    <form action="http://127.0.0.1:5000/biseccion" method="POST">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="ejercicio">Ejercicio</label>
-          <input type="text" id="ejercicio" name="ejercicio">
+  </div>
+
+  <div class="main-content">
+
+    <hr class="linea-seccion">
+
+    <section id="biseccion" class="biseccion-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Metodo de Bisección
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/biseccion" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio">Ejercicio</label>
+              <input type="text" id="ejercicio" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="funcion">Funcion</label>
+              <input type="text" id="funcion" name="funcion">
+            </div>
+            <div class="form-group">
+              <label for="xa">X^a</label>
+              <input type="text" id="xa" name="xa">
+            </div>
+            <div class="form-group">
+              <label for="xb">X^b</label>
+              <input type="text" id="xb" name="xb">
+            </div>
+            <div class="form-group">
+              <label for="es">Es%</label>
+              <input type="text" id="es" name="es">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button type="button" onclick="buscarPorEjercicio(event)">🔍 Buscar</button>
+            <button onclick="eliminarEjercicio(event)"> Eliminar</button>
+            <button type="submit"> Calcular</button>
+            <button onclick="actualizarEjercicio(event)"> Actualizar</button>
+          </div>
+        </form>
+        <div class="tabla-contenedor">
+          <h2>Resultados del Método de Bisección</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>X<sup>a</sup></th>
+                  <th>X<sup>b</sup></th>
+                  <th>f(X<sup>a</sup>)</th>
+                  <th>f(X<sup>b</sup>)</th>
+                  <th>X<sup>r</sup></th>
+                  <th>f(X<sup>r</sup>)</th>
+                  <th>Ea</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top: 20px; text-align: center;">
+            <button onclick="exportarTabla('tabla-resultados', 'biseccion_resultados.xlsx', 'Biseccion')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
+
+          <div style="margin-top: 30px; text-align: center;">
+            <button onclick="exportarTodo()"
+              style="background-color: #004d40; color: white; padding: 12px 25px; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar todo a un solo Excel
+            </button>
+          </div>
+
         </div>
-        <div class="form-group">
-          <label for="funcion">Funcion</label>
-          <input type="text" id="funcion" name="funcion">
+        <div style="text-align: center; margin-top: 30px;">
+          <img id="grafica-biseccion" src="" alt="Gráfica del método de bisección"
+            style="max-width: 100%; height: auto; border: 2px solid #ccc; padding: 10px; display: none;">
         </div>
-        <div class="form-group">
-          <label for="xa">X^a</label>
-          <input type="text" id="xa" name="xa">
+        <div class="grafica-container">
+          <h2>Gráfica del Método de Bisección</h2>
+          <div class="selector">
+            <label for="ejercicioSelect">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelect" onchange="cargarGrafica()"></select>
+          </div>
+          <iframe id="grafica-interactiva" src="/static/imagenes/biseccion.html"></iframe>
         </div>
-        <div class="form-group">
-          <label for="xb">X^b</label>
-          <input type="text" id="xb" name="xb">
+    </section>
+
+
+    <section id="falsa" class="falsa-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Método de Falsa Posición
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/falsa-posicion" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio-falsa">Ejercicio</label>
+              <input type="text" id="ejercicio-falsa" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="funcion-falsa">Función</label>
+              <input type="text" id="funcion-falsa" name="funcion">
+            </div>
+            <div class="form-group">
+              <label for="xa-falsa">X<sup>a</sup></label>
+              <input type="text" id="xa-falsa" name="xa">
+            </div>
+            <div class="form-group">
+              <label for="xb-falsa">X<sup>b</sup></label>
+              <input type="text" id="xb-falsa" name="xb">
+            </div>
+            <div class="form-group">
+              <label for="es-falsa">Es%</label>
+              <input type="text" id="es-falsa" name="es">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button type="button" onclick="buscarPorEjercicioFalsa(event)"> Buscar</button>
+            <button onclick="eliminarEjercicioFalsa(event)"> Eliminar</button>
+            <button type="submit">Calcular</button>
+            <button onclick="actualizarEjercicioFalsa(event)"> Actualizar</button>
+          </div>
+        </form>
+
+        <div class="tabla-contenedor">
+          <h2>Resultados del Método de Falsa Posición</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados-falsa">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>X<sup>a</sup></th>
+                  <th>X<sup>b</sup></th>
+                  <th>f(X<sup>a</sup>)</th>
+                  <th>f(X<sup>b</sup>)</th>
+                  <th>X<sup>r</sup></th>
+                  <th>f(X<sup>r</sup>)</th>
+                  <th>Ea</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 20px; text-align: center;">
+            <button onclick="exportarTabla('tabla-resultados-falsa', 'falsa_posicion_resultados.xlsx', 'FalsaPosicion')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="es">Es%</label>
-          <input type="text" id="es" name="es">
+        <div class="grafica-container">
+          <h2>Gráfica del Método de Falsa Posición</h2>
+          <div class="selector">
+            <label for="ejercicioSelectFalsa">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelectFalsa" onchange="cargarGraficaFalsa()"></select>
+          </div>
+          <iframe id="grafica-interactiva-falsa" style="width:100%; height:500px; border:none;"></iframe>
         </div>
       </div>
+    </section>
+
+
+    <section id="puntofijo" class="puntofijo-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Método de Punto Fijo
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/punto-fijo" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio-puntofijo">Ejercicio</label>
+              <input type="text" id="ejercicio-puntofijo" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="funcion-puntofijo">g(x)</label>
+              <input type="text" id="funcion-puntofijo" name="funcion">
+            </div>
+            <div class="form-group">
+              <label for="x0-puntofijo">X<sub>0</sub></label>
+              <input type="text" id="x0-puntofijo" name="x0">
+            </div>
+            <div class="form-group">
+              <label for="es-puntofijo">Es%</label>
+              <input type="text" id="es-puntofijo" name="es">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button type="button" onclick="buscarPorEjercicioPuntoFijo(event)"> Buscar</button>
+            <button onclick="eliminarEjercicioPuntoFijo(event)"> Eliminar</button>
+            <button type="submit">Calcular</button>
+            <button onclick="actualizarEjercicioPuntoFijo(event)"> Actualizar</button>
+          </div>
+        </form>
+
+        <div class="tabla-contenedor">
+          <h2>Resultados del Método de Punto Fijo</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados-puntofijo">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>X<sub>i</sub></th>
+                  <th>g(X<sub>i</sub>)</th>
+                  <th>Ea (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 20px; text-align: center;">
+            <button onclick="exportarTabla('tabla-resultados-puntofijo', 'punto_fijo_resultados.xlsx', 'PuntoFijo')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
+          <div style="width: 90%; margin: 30px auto;">
+            <canvas id="grafica-biseccion"></canvas>
+          </div>
+        </div>
+        <div class="grafica-container">
+          <h2>Gráfica del Método de Punto Fijo</h2>
+          <div class="selector">
+            <label for="ejercicioSelectPuntoFijo">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelectPuntoFijo" onchange="cargarGraficaPuntoFijo()"></select>
+          </div>
+          <iframe id="grafica-interactiva-puntofijo" src=""></iframe>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="newton" class="newton-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Método de Newton-Raphson
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/newton-raphson" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio-newton">Ejercicio</label>
+              <input type="text" id="ejercicio-newton" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="funcion-newton">f(x)</label>
+              <input type="text" id="funcion-newton" name="funcion">
+            </div>
+            <div class="form-group">
+              <label for="derivada-newton">f'(x)</label>
+              <input type="text" id="derivada-newton" name="derivada">
+            </div>
+            <div class="form-group">
+              <label for="x0-newton">X<sub>0</sub></label>
+              <input type="text" id="x0-newton" name="x0">
+            </div>
+            <div class="form-group">
+              <label for="es-newton">Es%</label>
+              <input type="text" id="es-newton" name="es">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button onclick="eliminarEjercicioNewton(event)"> Eliminar</button>
+            <button type="submit">Calcular</button>
+            <button onclick="actualizarEjercicioNewton(event)"> Actualizar</button>
+          </div>
+        </form>
+
+        <div class="tabla-contenedor">
+          <h2>Resultados del Método de Newton-Raphson</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados-newton">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>X<sub>i</sub></th>
+                  <th>f(X<sub>i</sub>)</th>
+                  <th>f'(X<sub>i</sub>)</th>
+                  <th>X<sub>i+1</sub></th>
+                  <th>Ea (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 20px; text-align: center;">
+            <button
+              onclick="exportarTabla('tabla-resultados-newton', 'newton_raphson_resultados.xlsx', 'NewtonRaphson')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
+        </div>
+        <div class="grafica-container">
+          <h2>Gráfica del Método de Newton-Raphson</h2>
+          <div class="selector">
+            <label for="ejercicioSelectNewton">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelectNewton" onchange="cargarGraficaNewton()"></select>
+          </div>
+          <iframe id="grafica-interactiva-newton" style="width:100%; height:500px; border:none;"></iframe>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="secante" class="secante-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Método de la Secante
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/secante" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio-secante">Ejercicio</label>
+              <input type="text" id="ejercicio-secante" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="funcion-secante">f(x)</label>
+              <input type="text" id="funcion-secante" name="funcion">
+            </div>
+            <div class="form-group">
+              <label for="x0-secante">X<sub>i</sub></label>
+              <input type="text" id="x0-secante" name="x0">
+            </div>
+            <div class="form-group">
+              <label for="x1-secante">X<sub>i-1</sub></label>
+              <input type="text" id="x1-secante" name="x1">
+            </div>
+            <div class="form-group">
+              <label for="es-secante">Es%</label>
+              <input type="text" id="es-secante" name="es">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button type="button" onclick="buscarPorEjercicioSecante(event)"> Buscar</button>
+            <button onclick="eliminarEjercicioSecante(event)"> Eliminar</button>
+            <button type="submit">Calcular</button>
+            <button onclick="actualizarEjercicioSecante(event)"> Actualizar</button>
+          </div>
+        </form>
+
+        <div class="tabla-contenedor">
+          <h2>Resultados del Método de la Secante</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados-secante">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>X<sub>i</sub></th>
+                  <th>X<sub>i-1</sub></th>
+                  <th>f(X<sub>i</sub>)</th>
+                  <th>f(X<sub>i-1</sub>)</th>
+                  <th>X<sub>i+1</sub></th>
+                  <th>Ea (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 20px; text-align: center;">
+            <button onclick="exportarTabla('tabla-resultados-secante', 'secante_resultados.xlsx', 'Secante')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
+        </div>
+        <div class="grafica-container">
+          <h2>Gráfica del Método de la Secante</h2>
+          <div class="selector">
+            <label for="ejercicioSelectSecante">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelectSecante" onchange="cargarGraficaSecante()"></select>
+          </div>
+          <iframe id="grafica-interactiva-secante" style="width:100%; height:500px; border:none;"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="muller" class="muller-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Método de Müller
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/muller" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio-muller">Ejercicio</label>
+              <input type="text" id="ejercicio-muller" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="funcion-muller">f(x)</label>
+              <input type="text" id="funcion-muller" name="funcion">
+            </div>
+            <div class="form-group">
+              <label for="x0-muller">X0</label>
+              <input type="text" id="x0-muller" name="x0">
+            </div>
+            <div class="form-group">
+              <label for="x1-muller">X1</label>
+              <input type="text" id="x1-muller" name="x1">
+            </div>
+            <div class="form-group">
+              <label for="x2-muller">X2</label>
+              <input type="text" id="x2-muller" name="x2">
+            </div>
+            <div class="form-group">
+              <label for="es-muller">Es%</label>
+              <input type="text" id="es-muller" name="es">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button type="button" onclick="buscarPorEjercicioMuller(event)"> Buscar</button>
+            <button onclick="eliminarEjercicioMuller(event)"> Eliminar</button>
+            <button type="submit">Calcular</button>
+            <button onclick="actualizarEjercicioMuller(event)"> Actualizar</button>
+          </div>
+        </form>
+        <div class="tabla-contenedor">
+          <h2>Resultados del Método de Müller</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados-muller">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>X0</th>
+                  <th>X1</th>
+                  <th>X2</th>
+                  <th>X3</th>
+                  <th>f(X3)</th>
+                  <th>Ea (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 20px; text-align: center;">
+            <button onclick="exportarTabla('tabla-resultados-muller', 'muller_resultados.xlsx', 'Muller')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
+        </div>
+        <div class="grafica-container">
+          <h2>Gráfica del Método de Müller</h2>
+          <div class="selector">
+            <label for="ejercicioSelectMuller">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelectMuller" onchange="cargarGraficaMuller()"></select>
+          </div>
+          <iframe id="grafica-interactiva-muller" style="width:100%; height:500px; border:none;"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="newton-senl" class="senl-scroll-section">
+      <hr class="linea-seccion">
+      <div class="titulo-metodo">
+        Newton-Raphson para Sistemas (3 variables)
+      </div>
+      <div class="contenido-scroll">
+        <form action="http://127.0.0.1:5000/newton-senl" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ejercicio-senl">Ejercicio</label>
+              <input type="text" id="ejercicio-senl" name="ejercicio">
+            </div>
+            <div class="form-group">
+              <label for="f1-senl">f1(x,y,z)</label>
+              <input type="text" id="f1-senl" name="f1" placeholder="x+y+z-6">
+            </div>
+            <div class="form-group">
+              <label for="f2-senl">f2(x,y,z)</label>
+              <input type="text" id="f2-senl" name="f2" placeholder="x^2+y^2-z">
+            </div>
+            <div class="form-group">
+              <label for="f3-senl">f3(x,y,z)</label>
+              <input type="text" id="f3-senl" name="f3" placeholder="2*x-y+z-3">
+            </div>
+            <div class="form-group">
+              <label for="x0-senl">x0</label>
+              <input type="text" id="x0-senl" name="x0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="y0-senl">y0</label>
+              <input type="text" id="y0-senl" name="y0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="z0-senl">z0</label>
+              <input type="text" id="z0-senl" name="z0" placeholder="4">
+            </div>
+            <div class="form-group">
+              <label for="es-senl">Es%</label>
+              <input type="text" id="es-senl" name="es" placeholder="0.01">
+            </div>
+          </div>
+          <div class="botones-biseccion">
+            <button type="button" onclick="buscarPorEjercicioSenl(event)"> Buscar</button>
+            <button onclick="eliminarEjercicioSenl(event)"> Eliminar</button>
+            <button type="submit">Calcular</button>
+            <button onclick="actualizarEjercicioSenl(event)"> Actualizar</button>
+          </div>
+        </form>
+        <div class="tabla-contenedor">
+          <h2>Resultados Newton-Raphson Sistemas</h2>
+          <div class="tabla-scroll">
+            <table id="tabla-resultados-newton-sistemas">
+              <thead>
+                <tr>
+                  <th>Ejercicio</th>
+                  <th>Iteración</th>
+                  <th>x</th>
+                  <th>y</th>
+                  <th>z</th>
+                  <th>f(x)</th>
+                  <th>f(y)</th>
+                  <th>f(z)</th>
+                  <th>Δx</th>
+                  <th>Δy</th>
+                  <th>Δz</th>
+                  <th>e1(%)</th>
+                  <th>e2(%)</th>
+                  <th>e3(%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top: 20px; text-align: center;">
+            <button
+              onclick="exportarTabla('tabla-resultados-newton-sistemas', 'newton_senl_resultados.xlsx', 'NewtonSENL')"
+              style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
+              onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
+              onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
+              Exportar a Excel
+            </button>
+          </div>
+        </div>
+        <div class="grafica-container">
+          <h2>Gráfica de Newton-Raphson Sistemas</h2>
+          <div class="selector">
+            <label for="ejercicioSelectSenl">Seleccionar ejercicio:</label>
+            <select id="ejercicioSelectSenl" onchange="cargarGraficaSenl()"></select>
+          </div>
+          <iframe id="grafica-interactiva-senl" style="width:100%; height:500px; border:none;"></iframe>
+        </div>
+      </div>
+      <section id="horner" class="horner-scroll-section">
+  <hr class="linea-seccion">
+  <div class="titulo-metodo">
+    Método de Horner
+  </div>
+
+  <div class="contenido-scroll">
+
+    <form action="http://127.0.0.1:5000/horner" method="POST">
+      <div class="form-row">
+
+        <div class="form-group">
+          <label for="ejercicio-horner">Ejercicio</label>
+          <input type="text" id="ejercicio-horner" name="ejercicio">
+        </div>
+
+        <div class="form-group">
+          <label for="polinomio-horner">Polinomio</label>
+          <input type="text" id="polinomio-horner" name="polinomio" placeholder="x^3 - 2x + 1">
+        </div>
+
+        <div class="form-group">
+          <label for="x-horner">X</label>
+          <input type="text" id="x-horner" name="x">
+        </div>
+
+        <div class="form-group">
+          <label for="es-horner">Es%</label>
+          <input type="text" id="es-horner" name="es">
+        </div>
+
+      </div>
+
       <div class="botones-biseccion">
-        <button type="button" onclick="buscarPorEjercicio(event)">🔍 Buscar</button>
-        <button onclick="eliminarEjercicio(event)"> Eliminar</button>
-        <button type="submit"> Calcular</button>
-        <button onclick="actualizarEjercicio(event)"> Actualizar</button>
+        <button type="button" onclick="buscarPorEjercicioHorner(event)">🔍 Buscar</button>
+        <button onclick="eliminarEjercicioHorner(event)">🗑 Eliminar</button>
+        <button type="submit">⚙ Calcular</button>
+        <button onclick="actualizarEjercicioHorner(event)">✏ Actualizar</button>
       </div>
     </form>
+
     <div class="tabla-contenedor">
-      <h2>Resultados del Método de Bisección</h2>
+      <h2>Resultados del Método de Horner</h2>
+
       <div class="tabla-scroll">
-        <table id="tabla-resultados">
+        <table id="tabla-resultados-horner">
           <thead>
             <tr>
               <th>Ejercicio</th>
               <th>Iteración</th>
-              <th>X<sup>a</sup></th>
-              <th>X<sup>b</sup></th>
-              <th>f(X<sup>a</sup>)</th>
-              <th>f(X<sup>b</sup>)</th>
-              <th>X<sup>r</sup></th>
-              <th>f(X<sup>r</sup>)</th>
-              <th>Ea</th>
+              <th>Coeficientes</th>
+              <th>X</th>
+              <th>Es%</th>
+              <th>P(X)</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-      </div> 
+      </div>
 
       <div style="margin-top: 20px; text-align: center;">
-        <button onclick="exportarTabla('tabla-resultados', 'biseccion_resultados.xlsx', 'Biseccion')" 
-                style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-           Exportar a Excel
+        <button onclick="exportarTabla('tabla-resultados-horner', 'horner_resultados.xlsx', 'Horner')"
+          style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+          Exportar a Excel
         </button>
       </div>
-      
-      <div style="margin-top: 30px; text-align: center;">
-        <button onclick="exportarTodo()" 
-                style="background-color: #004d40; color: white; padding: 12px 25px; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; transition: background-color 0.3s;"
-                onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-           Exportar todo a un solo Excel
-        </button>
-      </div>
-      
     </div>
-    <div style="text-align: center; margin-top: 30px;">
-      <img id="grafica-biseccion" src="" alt="Gráfica del método de bisección"
-           style="max-width: 100%; height: auto; border: 2px solid #ccc; padding: 10px; display: none;">
-    </div>
+
     <div class="grafica-container">
-      <h2>Gráfica del Método de Bisección</h2>
+      <h2>Gráfica del Método de Horner</h2>
+
       <div class="selector">
-        <label for="ejercicioSelect">Seleccionar ejercicio:</label>
-        <select id="ejercicioSelect" onchange="cargarGrafica()"></select>
+        <label for="ejercicioSelectHorner">Seleccionar ejercicio:</label>
+        <select id="ejercicioSelectHorner" onchange="cargarGraficaHorner()"></select>
       </div>
-      <iframe id="grafica-interactiva" src="/static/imagenes/biseccion.html"></iframe>
-    </div>
-  </section>
 
+      <iframe id="grafica-interactiva-horner"
+        style="width:100%; height:500px; border:none;"></iframe>
+    </div>
 
-  <section id="falsa" class="falsa-scroll-section">
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Falsa Posición
-    </div>
-    <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/falsa-posicion" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-falsa">Ejercicio</label>
-            <input type="text" id="ejercicio-falsa" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-falsa">Función</label>
-            <input type="text" id="funcion-falsa" name="funcion">
-          </div>
-          <div class="form-group">
-            <label for="xa-falsa">X<sup>a</sup></label>
-            <input type="text" id="xa-falsa" name="xa">
-          </div>
-          <div class="form-group">
-            <label for="xb-falsa">X<sup>b</sup></label>
-            <input type="text" id="xb-falsa" name="xb">
-          </div>
-          <div class="form-group">
-            <label for="es-falsa">Es%</label>
-            <input type="text" id="es-falsa" name="es">
-          </div>
-        </div>
-        <div class="botones-biseccion">
-          <button type="button" onclick="buscarPorEjercicioFalsa(event)"> Buscar</button>
-          <button onclick="eliminarEjercicioFalsa(event)"> Eliminar</button>
-          <button type="submit">Calcular</button>
-          <button onclick="actualizarEjercicioFalsa(event)"> Actualizar</button>
-        </div>
-      </form>
-  
-      <div class="tabla-contenedor">
-        <h2>Resultados del Método de Falsa Posición</h2>
-        <div class="tabla-scroll">
-          <table id="tabla-resultados-falsa">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>X<sup>a</sup></th>
-                <th>X<sup>b</sup></th>
-                <th>f(X<sup>a</sup>)</th>
-                <th>f(X<sup>b</sup>)</th>
-                <th>X<sup>r</sup></th>
-                <th>f(X<sup>r</sup>)</th>
-                <th>Ea</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div> 
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="exportarTabla('tabla-resultados-falsa', 'falsa_posicion_resultados.xlsx', 'FalsaPosicion')" 
-                  style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                  onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                  onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-             Exportar a Excel
-          </button>
-        </div>
-      </div>
-      <div class="grafica-container">
-        <h2>Gráfica del Método de Falsa Posición</h2>
-        <div class="selector">
-          <label for="ejercicioSelectFalsa">Seleccionar ejercicio:</label>
-          <select id="ejercicioSelectFalsa" onchange="cargarGraficaFalsa()"></select>
-        </div>
-        <iframe id="grafica-interactiva-falsa" style="width:100%; height:500px; border:none;"></iframe>
-      </div>
-    </div>
-  </section>
-  
+  </div>
+</section>
 
-  <section id="puntofijo" class="puntofijo-scroll-section">  
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Punto Fijo
-    </div>
-    <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/punto-fijo" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-puntofijo">Ejercicio</label>
-            <input type="text" id="ejercicio-puntofijo" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-puntofijo">g(x)</label>
-            <input type="text" id="funcion-puntofijo" name="funcion">
-          </div>
-          <div class="form-group">
-            <label for="x0-puntofijo">X<sub>0</sub></label>
-            <input type="text" id="x0-puntofijo" name="x0">
-          </div>
-          <div class="form-group">
-            <label for="es-puntofijo">Es%</label>
-            <input type="text" id="es-puntofijo" name="es">
-          </div>
-        </div>
-        <div class="botones-biseccion">
-          <button type="button" onclick="buscarPorEjercicioPuntoFijo(event)"> Buscar</button>
-          <button onclick="eliminarEjercicioPuntoFijo(event)"> Eliminar</button>
-          <button type="submit">Calcular</button>
-          <button onclick="actualizarEjercicioPuntoFijo(event)"> Actualizar</button>
-        </div>
-      </form>
-  
-      <div class="tabla-contenedor">
-        <h2>Resultados del Método de Punto Fijo</h2>
-        <div class="tabla-scroll">
-          <table id="tabla-resultados-puntofijo">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>X<sub>i</sub></th>
-                <th>g(X<sub>i</sub>)</th>
-                <th>Ea (%)</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="exportarTabla('tabla-resultados-puntofijo', 'punto_fijo_resultados.xlsx', 'PuntoFijo')" 
-                  style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                  onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                  onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-             Exportar a Excel
-          </button>
-        </div>
-        <div style="width: 90%; margin: 30px auto;">
-          <canvas id="grafica-biseccion"></canvas>
-        </div>
-      </div>
-      <div class="grafica-container">
-        <h2>Gráfica del Método de Punto Fijo</h2>
-        <div class="selector">
-          <label for="ejercicioSelectPuntoFijo">Seleccionar ejercicio:</label>
-          <select id="ejercicioSelectPuntoFijo" onchange="cargarGraficaPuntoFijo()"></select>
-        </div>
-        <iframe id="grafica-interactiva-puntofijo" src=""></iframe>
-      </div>
-    </div>
-  </section>
-  
+    </section>
 
-  <section id="newton" class="newton-scroll-section">
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Newton-Raphson
-    </div>
-    <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/newton-raphson" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-newton">Ejercicio</label>
-            <input type="text" id="ejercicio-newton" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-newton">f(x)</label>
-            <input type="text" id="funcion-newton" name="funcion">
-          </div>
-          <div class="form-group">
-            <label for="derivada-newton">f'(x)</label>
-            <input type="text" id="derivada-newton" name="derivada">
-          </div>
-          <div class="form-group">
-            <label for="x0-newton">X<sub>0</sub></label>
-            <input type="text" id="x0-newton" name="x0">
-          </div>
-          <div class="form-group">
-            <label for="es-newton">Es%</label>
-            <input type="text" id="es-newton" name="es">
-          </div>
-        </div>
-        <div class="botones-biseccion">
-          <button onclick="eliminarEjercicioNewton(event)"> Eliminar</button>
-          <button type="submit">Calcular</button>
-          <button onclick="actualizarEjercicioNewton(event)"> Actualizar</button>
-        </div>
-      </form>
-  
-      <div class="tabla-contenedor">
-        <h2>Resultados del Método de Newton-Raphson</h2>
-        <div class="tabla-scroll">
-          <table id="tabla-resultados-newton">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>X<sub>i</sub></th>
-                <th>f(X<sub>i</sub>)</th>
-                <th>f'(X<sub>i</sub>)</th>
-                <th>X<sub>i+1</sub></th>
-                <th>Ea (%)</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="exportarTabla('tabla-resultados-newton', 'newton_raphson_resultados.xlsx', 'NewtonRaphson')" 
-                  style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                  onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                  onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-             Exportar a Excel
-          </button>
-        </div>
-      </div>
-      <div class="grafica-container">
-        <h2>Gráfica del Método de Newton-Raphson</h2>
-        <div class="selector">
-          <label for="ejercicioSelectNewton">Seleccionar ejercicio:</label>
-          <select id="ejercicioSelectNewton" onchange="cargarGraficaNewton()"></select>
-        </div>
-        <iframe id="grafica-interactiva-newton" style="width:100%; height:500px; border:none;"></iframe>
-      </div>
-    </div>
-  </section> 
-  
+  </div>
 
-  <section id="secante" class="secante-scroll-section">
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de la Secante
-    </div>
-    <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/secante" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-secante">Ejercicio</label>
-            <input type="text" id="ejercicio-secante" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-secante">f(x)</label>
-            <input type="text" id="funcion-secante" name="funcion">
-          </div>
-          <div class="form-group">
-            <label for="x0-secante">X<sub>i</sub></label>
-            <input type="text" id="x0-secante" name="x0">
-          </div>
-          <div class="form-group">
-            <label for="x1-secante">X<sub>i-1</sub></label>
-            <input type="text" id="x1-secante" name="x1">
-          </div>
-          <div class="form-group">
-            <label for="es-secante">Es%</label>
-            <input type="text" id="es-secante" name="es">
-          </div>
-        </div>
-        <div class="botones-biseccion">
-          <button type="button" onclick="buscarPorEjercicioSecante(event)"> Buscar</button>
-          <button onclick="eliminarEjercicioSecante(event)"> Eliminar</button>
-          <button type="submit">Calcular</button>
-          <button onclick="actualizarEjercicioSecante(event)"> Actualizar</button>
-        </div>
-      </form>
-  
-      <div class="tabla-contenedor">
-        <h2>Resultados del Método de la Secante</h2>
-        <div class="tabla-scroll">
-          <table id="tabla-resultados-secante">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>X<sub>i</sub></th>
-                <th>X<sub>i-1</sub></th>
-                <th>f(X<sub>i</sub>)</th>
-                <th>f(X<sub>i-1</sub>)</th>
-                <th>X<sub>i+1</sub></th>
-                <th>Ea (%)</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="exportarTabla('tabla-resultados-secante', 'secante_resultados.xlsx', 'Secante')" 
-                  style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                  onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                  onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-             Exportar a Excel
-          </button>
-        </div>
-      </div>
-      <div class="grafica-container">
-        <h2>Gráfica del Método de la Secante</h2>
-        <div class="selector">
-          <label for="ejercicioSelectSecante">Seleccionar ejercicio:</label>
-          <select id="ejercicioSelectSecante" onchange="cargarGraficaSecante()"></select>
-        </div>
-        <iframe id="grafica-interactiva-secante" style="width:100%; height:500px; border:none;"></iframe>
-      </div>
-    </div>
-  </section>
-  
-  <section id="muller" class="muller-scroll-section">
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Müller
-    </div>
-    <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/muller" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-muller">Ejercicio</label>
-            <input type="text" id="ejercicio-muller" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-muller">f(x)</label>
-            <input type="text" id="funcion-muller" name="funcion">
-          </div>
-          <div class="form-group">
-            <label for="x0-muller">X0</label>
-            <input type="text" id="x0-muller" name="x0">
-          </div>
-          <div class="form-group">
-            <label for="x1-muller">X1</label>
-            <input type="text" id="x1-muller" name="x1">
-          </div>
-          <div class="form-group">
-            <label for="x2-muller">X2</label>
-            <input type="text" id="x2-muller" name="x2">
-          </div>
-          <div class="form-group">
-            <label for="es-muller">Es%</label>
-            <input type="text" id="es-muller" name="es">
-          </div>
-        </div>
-        <div class="botones-biseccion">
-          <button type="button" onclick="buscarPorEjercicioMuller(event)"> Buscar</button>
-          <button onclick="eliminarEjercicioMuller(event)"> Eliminar</button>
-          <button type="submit">Calcular</button>
-          <button onclick="actualizarEjercicioMuller(event)"> Actualizar</button>
-        </div>
-      </form>
-      <div class="tabla-contenedor">
-        <h2>Resultados del Método de Müller</h2>
-        <div class="tabla-scroll">
-          <table id="tabla-resultados-muller">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>X0</th>
-                <th>X1</th>
-                <th>X2</th>
-                <th>X3</th>
-                <th>f(X3)</th>
-                <th>Ea (%)</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="exportarTabla('tabla-resultados-muller', 'muller_resultados.xlsx', 'Muller')" 
-                  style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                  onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                  onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-             Exportar a Excel
-          </button>
-        </div>
-      </div>
-      <div class="grafica-container">
-        <h2>Gráfica del Método de Müller</h2>
-        <div class="selector">
-          <label for="ejercicioSelectMuller">Seleccionar ejercicio:</label>
-          <select id="ejercicioSelectMuller" onchange="cargarGraficaMuller()"></select>
-        </div>
-        <iframe id="grafica-interactiva-muller" style="width:100%; height:500px; border:none;"></iframe>
-      </div>
-    </div>
-  </section>
-
-  <section id="newton-senl" class="senl-scroll-section">
-    <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Newton-Raphson para Sistemas (3 variables)
-    </div>
-    <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/newton-senl" method="POST">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-senl">Ejercicio</label>
-            <input type="text" id="ejercicio-senl" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="f1-senl">f1(x,y,z)</label>
-            <input type="text" id="f1-senl" name="f1" placeholder="x+y+z-6">
-          </div>
-          <div class="form-group">
-            <label for="f2-senl">f2(x,y,z)</label>
-            <input type="text" id="f2-senl" name="f2" placeholder="x^2+y^2-z">
-          </div>
-          <div class="form-group">
-            <label for="f3-senl">f3(x,y,z)</label>
-            <input type="text" id="f3-senl" name="f3" placeholder="2*x-y+z-3">
-          </div>
-          <div class="form-group">
-            <label for="x0-senl">x0</label>
-            <input type="text" id="x0-senl" name="x0" placeholder="0">
-          </div>
-          <div class="form-group">
-            <label for="y0-senl">y0</label>
-            <input type="text" id="y0-senl" name="y0" placeholder="0">
-          </div>
-          <div class="form-group">
-            <label for="z0-senl">z0</label>
-            <input type="text" id="z0-senl" name="z0" placeholder="4">
-          </div>
-          <div class="form-group">
-            <label for="es-senl">Es%</label>
-            <input type="text" id="es-senl" name="es" placeholder="0.01">
-          </div>
-        </div>
-        <div class="botones-biseccion">
-          <button type="button" onclick="buscarPorEjercicioSenl(event)"> Buscar</button>
-          <button onclick="eliminarEjercicioSenl(event)"> Eliminar</button>
-          <button type="submit">Calcular</button>
-          <button onclick="actualizarEjercicioSenl(event)"> Actualizar</button>
-        </div>
-      </form>
-      <div class="tabla-contenedor">
-        <h2>Resultados Newton-Raphson Sistemas</h2>
-        <div class="tabla-scroll">
-          <table id="tabla-resultados-newton-sistemas">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>x</th>
-                <th>y</th>
-                <th>z</th>
-                <th>f(x)</th>
-                <th>f(y)</th>
-                <th>f(z)</th>
-                <th>Δx</th>
-                <th>Δy</th>
-                <th>Δz</th>
-                <th>e1(%)</th>
-                <th>e2(%)</th>
-                <th>e3(%)</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="exportarTabla('tabla-resultados-newton-sistemas', 'newton_senl_resultados.xlsx', 'NewtonSENL')"
-                  style="background-color: #004d40; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.3s;"
-                  onmouseover="this.style.backgroundColor='#00796b'; this.style.transform='scale(1.05)';"
-                  onmouseout="this.style.backgroundColor='#004d40'; this.style.transform='scale(1)';">
-             Exportar a Excel
-          </button>
-        </div>
-      </div>
-      <div class="grafica-container">
-        <h2>Gráfica de Newton-Raphson Sistemas</h2>
-        <div class="selector">
-          <label for="ejercicioSelectSenl">Seleccionar ejercicio:</label>
-          <select id="ejercicioSelectSenl" onchange="cargarGraficaSenl()"></select>
-        </div>
-        <iframe id="grafica-interactiva-senl" style="width:100%; height:500px; border:none;"></iframe>
-      </div>
-    </div>
-  </section>
-
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="Funciones.js"></script>
-<script src="Funciones_fix.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="Funciones.js"></script>
+  <script src="Funciones_fix.js"></script>
 </body>
+
 </html>

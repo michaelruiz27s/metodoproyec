@@ -8,8 +8,15 @@ function toggleSubmenu(id) {
 //Metodo de biseccion//
 function cargarResultados() {
   fetch("http://127.0.0.1:5000/resultados-biseccion")
-    .then(response => response.json())
-    .then(data => {
+    .then(async response => {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    }).then(data => {
       const tbody = document.querySelector("#tabla-resultados tbody");
       tbody.innerHTML = "";
       data.forEach(fila => {
@@ -25,34 +32,34 @@ function cargarResultados() {
     .catch(error => {
       console.error("Error cargando los datos:", error);
     });
-    actualizarSelect();
+  actualizarSelect();
 
 }
 function buscarPorEjercicio(event) {
-  event.preventDefault(); 
+  event.preventDefault();
 
   const ejercicio = document.getElementById("ejercicio").value;
 
   if (!ejercicio) {
-      alert("Por favor ingrese un número de ejercicio.");
-      return;
+    alert("Por favor ingrese un número de ejercicio.");
+    return;
   }
 
   fetch(`/buscar_ejercicio/${ejercicio}`)
-      .then(response => response.json())
-      .then(data => {
-          const tbody = document.querySelector("#tabla-resultados tbody");
-          tbody.innerHTML = ""; 
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados tbody");
+      tbody.innerHTML = "";
 
-          if (data.length === 0) {
-              tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No se encontraron resultados</td></tr>";
-              return;
-          }
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No se encontraron resultados</td></tr>";
+        return;
+      }
 
-          data.forEach(row => {
-              const tr = document.createElement("tr");
+      data.forEach(row => {
+        const tr = document.createElement("tr");
 
-              tr.innerHTML = `
+        tr.innerHTML = `
                   <td>${row.ejercicio}</td>
                   <td>${row.iteracion}</td>
                   <td>${row.xa}</td>
@@ -64,12 +71,12 @@ function buscarPorEjercicio(event) {
                   <td>${row.ea}</td>
               `;
 
-              tbody.appendChild(tr);
-          });
-      })
-      .catch(error => {
-          console.error("Error al buscar el ejercicio:", error);
+        tbody.appendChild(tr);
       });
+    })
+    .catch(error => {
+      console.error("Error al buscar el ejercicio:", error);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -84,17 +91,17 @@ document.addEventListener("DOMContentLoaded", function () {
       method: "POST",
       body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-      console.log("Servidor:", data.mensaje);
-      cargarResultados();
-      actualizarSelect();
+      .then(response => response.json())
+      .then(data => {
+        console.log("Servidor:", data.mensaje);
+        cargarResultados();
+        actualizarSelect();
 
-      const img = document.getElementById("grafica-biseccion");
-      img.src = data.imagen + "?" + new Date().getTime(); 
-      img.style.display = "block";s
-    })
-    
+        const img = document.getElementById("grafica-biseccion");
+        img.src = data.imagen + "?" + new Date().getTime();
+        img.style.display = "block";
+      })
+
       .catch(error => {
         console.error("Error al enviar los datos:", error);
       });
@@ -121,7 +128,7 @@ function eliminarEjercicio() {
     .then(response => response.text())
     .then(msg => {
       alert(msg);
-      cargarResultados(); 
+      cargarResultados();
       actualizarSelect();
     })
     .catch(error => {
@@ -141,7 +148,7 @@ function actualizarEjercicio() {
     .then(response => response.text())
     .then(data => {
       console.log("Actualización completada");
-      cargarResultados(); 
+      cargarResultados();
       actualizarSelect();
 
     })
@@ -155,7 +162,7 @@ function actualizarSelect() {
   fetch('/resultados-biseccion')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))]; 
+      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelect');
       select.innerHTML = '';
 
@@ -167,9 +174,9 @@ function actualizarSelect() {
       });
 
       if (ejerciciosUnicos.length > 0) {
-        select.value = ejerciciosUnicos[ejerciciosUnicos.length - 1]; 
+        select.value = ejerciciosUnicos[ejerciciosUnicos.length - 1];
         cargarGrafica();
-        
+
       }
     });
 }
@@ -194,8 +201,8 @@ function cargarResultadosFalsa() {
       });
     })
     .catch(error => console.error('Error cargando resultados:', error));
-    actualizarSelectFalsa();   
-  }
+  actualizarSelectFalsa();
+}
 function eliminarEjercicioFalsa(event) {
   event.preventDefault();
   const ejercicio = document.getElementById('ejercicio-falsa').value;
@@ -212,7 +219,7 @@ function eliminarEjercicioFalsa(event) {
     .then(data => {
       alert(data);
       cargarResultadosFalsa();
-      actualizarSelectFalsa();     
+      actualizarSelectFalsa();
     })
     .catch(error => console.error('Error al eliminar ejercicio:', error));
 }
@@ -234,7 +241,7 @@ function actualizarEjercicioFalsa(event) {
     .then(data => {
       alert(data);
       cargarResultadosFalsa();
-      actualizarSelectFalsa();     
+      actualizarSelectFalsa();
     })
     .catch(error => console.error('Error al actualizar ejercicio:', error));
 }
@@ -280,7 +287,7 @@ function actualizarSelectFalsa() {
   fetch('/resultados-falsa-posicion')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))]; 
+      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelectFalsa');
       select.innerHTML = '';
 
@@ -294,7 +301,7 @@ function actualizarSelectFalsa() {
       if (ejerciciosUnicos.length > 0) {
         select.value = ejerciciosUnicos[ejerciciosUnicos.length - 1];
         cargarGraficaFalsa();
-        
+
       }
     });
 }
@@ -310,8 +317,8 @@ formFalsa.addEventListener("submit", function (event) {
     .then(response => response.text())
     .then(msg => {
       console.log("Servidor (Falsa):", msg);
-      cargarResultadosFalsa(); 
-      actualizarSelectFalsa();    
+      cargarResultadosFalsa();
+      actualizarSelectFalsa();
     })
     .catch(error => {
       console.error("Error Falsa Posición:", error);
@@ -337,7 +344,7 @@ function cargarResultadosPuntoFijo() {
       });
     })
     .catch(error => console.error('Error cargando resultados Punto Fijo:', error));
-    actualizarSelectPuntoFijo(); // después de cargarResultadosPuntoFijo()
+  actualizarSelectPuntoFijo(); // después de cargarResultadosPuntoFijo()
 }
 
 function eliminarEjercicioPuntoFijo(event) {
@@ -393,8 +400,8 @@ formPuntoFijo.addEventListener("submit", function (event) {
     .then(response => response.text())
     .then(msg => {
       console.log("Servidor (Punto Fijo):", msg);
-      cargarResultadosPuntoFijo(); 
-      actualizarSelectPuntoFijo(); 
+      cargarResultadosPuntoFijo();
+      actualizarSelectPuntoFijo();
     })
     .catch(error => {
       console.error("Error Punto Fijo:", error);
@@ -538,7 +545,7 @@ formNewton.addEventListener("submit", function (event) {
     .then(response => response.text())
     .then(msg => {
       console.log("Servidor (Newton-Raphson):", msg);
-      cargarResultadosNewton(); 
+      cargarResultadosNewton();
     })
     .catch(error => {
       console.error("Error Newton-Raphson:", error);
@@ -563,7 +570,7 @@ function cargarResultadosSecante() {
       });
     })
     .catch(error => console.error('Error cargando resultados Secante:', error));
-    actualizarSelectSecante();
+  actualizarSelectSecante();
 }
 
 function eliminarEjercicioSecante(event) {
@@ -621,7 +628,7 @@ formSecante.addEventListener("submit", function (event) {
     .then(response => response.text())
     .then(msg => {
       console.log("Servidor (Secante):", msg);
-      cargarResultadosSecante(); 
+      cargarResultadosSecante();
       actualizarSelectSecante();
     })
     .catch(error => {
@@ -758,7 +765,7 @@ function cargarResultadosNewtonSistemas() {
           ${parseFloat(fila[2]).toFixed(8)}<br>
           ${parseFloat(fila[3]).toFixed(8)}
         `;
-        
+
 
         // F(x,y)
         const celdaFx = nuevaFila.insertCell();
@@ -766,7 +773,7 @@ function cargarResultadosNewtonSistemas() {
           ${parseFloat(fila[4]).toFixed(8)}<br>
           ${parseFloat(fila[5]).toFixed(8)}
         `;
-        
+
 
         // Jacobiano (J11, J12, J21, J22)
         const celdaJ = nuevaFila.insertCell();
@@ -774,7 +781,7 @@ function cargarResultadosNewtonSistemas() {
           ${parseFloat(fila[6]).toFixed(8)} ${parseFloat(fila[7]).toFixed(8)}<br>
           ${parseFloat(fila[8]).toFixed(8)} ${parseFloat(fila[9]).toFixed(8)}
         `;
-        
+
 
 
         // Inversa del Jacobiano (invJ11, invJ12, invJ21, invJ22)
@@ -783,7 +790,7 @@ function cargarResultadosNewtonSistemas() {
           ${parseFloat(fila[10]).toFixed(8)} ${parseFloat(fila[11]).toFixed(8)}<br>
           ${parseFloat(fila[12]).toFixed(8)} ${parseFloat(fila[13]).toFixed(8)}
         `;
-        
+
 
         // x y y nuevas
         const celdaDelta = nuevaFila.insertCell();
@@ -791,14 +798,14 @@ function cargarResultadosNewtonSistemas() {
           ${parseFloat(fila[14]).toFixed(8)}<br>
           ${parseFloat(fila[15]).toFixed(8)}
         `;
-        
+
         // e1 y e2
         const celdaError = nuevaFila.insertCell();
         celdaError.innerHTML = `
           ${fila[16] !== 0 ? parseFloat(fila[16]).toFixed(8) : '-'}<br>
           ${fila[17] !== 0 ? parseFloat(fila[17]).toFixed(8) : '-'}
         `;
-        
+
       });
     })
     .catch(error => console.error('Error cargando resultados Newton Sistemas:', error));
@@ -834,7 +841,7 @@ function actualizarEjercicioNewtonSistemas(event) {
   event.preventDefault();
 
   const form = document.querySelector('form[action="http://127.0.0.1:5000/newton-sistemas"]');
-  
+
   const formData = new FormData(form);
 
   fetch('http://127.0.0.1:5000/actualizar-newton-sistemas', {
@@ -843,8 +850,8 @@ function actualizarEjercicioNewtonSistemas(event) {
   })
     .then(response => response.text())
     .then(data => {
-      alert(data);               
-      cargarResultadosNewtonSistemas(); 
+      alert(data);
+      cargarResultadosNewtonSistemas();
     })
     .catch(error => {
       console.error('Error al actualizar ejercicio Newton Sistemas:', error);
@@ -855,22 +862,22 @@ function actualizarEjercicioNewtonSistemas(event) {
 // Cargar lista de ejercicios al iniciar
 window.onload = () => {
   fetch('/resultados-biseccion')
-      .then(res => res.json())
-      .then(data => {
-          const ejerciciosUnicos = [...new Set(data.map(row => row[0]))]; // row[0] = ejercicio
-          const select = document.getElementById('ejercicioSelect');
-          ejerciciosUnicos.forEach(ej => {
-              const option = document.createElement('option');
-              option.value = ej;
-              option.textContent = `Ejercicio ${ej}`;
-              select.appendChild(option);
-          });
-
-          if (ejerciciosUnicos.length > 0) {
-              select.value = ejerciciosUnicos[0];
-              cargarGrafica();
-          }
+    .then(res => res.json())
+    .then(data => {
+      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))]; // row[0] = ejercicio
+      const select = document.getElementById('ejercicioSelect');
+      ejerciciosUnicos.forEach(ej => {
+        const option = document.createElement('option');
+        option.value = ej;
+        option.textContent = `Ejercicio ${ej}`;
+        select.appendChild(option);
       });
+
+      if (ejerciciosUnicos.length > 0) {
+        select.value = ejerciciosUnicos[0];
+        cargarGrafica();
+      }
+    });
 };
 
 // Cargar la gráfica al cambiar de ejercicio
@@ -883,7 +890,7 @@ window.addEventListener('load', () => {
   fetch('/resultados-falsa-posicion')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))]; 
+      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelectFalsa');
       ejerciciosUnicos.forEach(ej => {
         const option = document.createElement('option');
@@ -1059,15 +1066,203 @@ if (formMuller) {
   });
 }
 
+// ====================== MÉTODO DE HORNER ======================
+
+function cargarResultadosHorner() {
+  fetch('/resultados-horner')
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-horner tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(fila => {
+        const tr = document.createElement("tr");
+
+        const coef = fila[2] ? JSON.parse(fila[2]).join(", ") : "";
+
+        tr.innerHTML = `
+          <td>${fila[0]}</td>
+          <td>${fila[1]}</td>
+          <td>${coef}</td>
+          <td>${parseFloat(fila[3]).toFixed(6)}</td>
+          <td>${parseFloat(fila[4]).toFixed(4)}</td>
+          <td><strong>${parseFloat(fila[5]).toFixed(8)}</strong></td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    });
+}
+
+function buscarPorEjercicioHorner(event) {
+  event.preventDefault();
+
+  const ejercicio = document.getElementById("ejercicio-horner").value;
+
+  fetch(`/buscar-horner/${ejercicio}`)
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-horner tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(fila => {
+        const tr = document.createElement("tr");
+
+        const coef = JSON.parse(fila[2]).join(", ");
+
+        tr.innerHTML = `
+          <td>${fila[0]}</td>
+          <td>${fila[1]}</td>
+          <td>${coef}</td>
+          <td>${parseFloat(fila[3]).toFixed(6)}</td>
+          <td>${parseFloat(fila[4]).toFixed(4)}</td>
+          <td><strong>${parseFloat(fila[5]).toFixed(8)}</strong></td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      // 🔥 CAMBIAR GRÁFICA
+      document.getElementById("grafica-interactiva-horner")
+        .src = `/static/imagenes/horner_${ejercicio}.html?t=${Date.now()}`;
+    });
+}
+
+function actualizarEjercicioHorner(event) {
+  event.preventDefault();
+
+  const formData = new FormData();
+  formData.append('ejercicio', document.getElementById('ejercicio-horner').value);
+  formData.append('polinomio', document.getElementById('polinomio-horner').value);
+  formData.append('x', document.getElementById('x-horner').value);
+  formData.append('es', document.getElementById('es-horner').value);
+
+  fetch('/actualizar-horner', {
+    method: 'POST',
+    body: formData
+  })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.mensaje);
+
+      cargarResultadosHorner();
+      actualizarSelectHorner();
+
+      document.getElementById("grafica-interactiva-horner")
+        .src = `/static/imagenes/horner_${data.ejercicio}.html?t=${Date.now()}`;
+    });
+}
+
+
+function eliminarEjercicioHorner(event) {
+  event.preventDefault();
+  const ejercicio = document.getElementById('ejercicio-horner').value;
+
+  if (!ejercicio) {
+    alert('Por favor, ingresa el número de ejercicio a eliminar.');
+    return;
+  }
+
+  if (!confirm(`¿Estás seguro de eliminar el ejercicio #${ejercicio}?`)) return;
+
+  fetch(`http://127.0.0.1:5000/eliminar-horner/${ejercicio}`, {
+    method: 'DELETE'
+  })
+    .then(response => response.text())
+    .then(msg => {
+      alert(msg);
+      cargarResultadosHorner();
+      actualizarSelectHorner();
+    })
+    .catch(error => {
+      console.error('Error al eliminar:', error);
+      alert("Error al eliminar el ejercicio.");
+    });
+}
+// Submit del formulario
+const formHorner = document.querySelector('form[action="http://127.0.0.1:5000/horner"]');
+if (formHorner) {
+  formHorner.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(formHorner);
+
+    fetch("http://127.0.0.1:5000/horner", {
+      method: "POST",
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Servidor (Horner):", data);
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else {
+          alert(`Cálculo exitoso → P(x) = ${data.resultado}`);
+          cargarResultadosHorner();
+          actualizarSelectHorner();
+          
+          // Actualizar gráfica automáticamente
+          setTimeout(() => {
+            cargarGraficaHorner();
+          }, 300);
+        }
+      })
+      .catch(error => {
+        console.error("Error Horner:", error);
+        alert("Error al realizar el cálculo");
+      });
+  });
+}
+
+function actualizarSelectHorner() {
+  fetch('/resultados-horner')
+    .then(res => res.json())
+    .then(data => {
+      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
+      const select = document.getElementById('ejercicioSelectHorner');
+      if (!select) return;
+
+      select.innerHTML = '';
+
+      ejerciciosUnicos.forEach(ej => {
+        const option = document.createElement('option');
+        option.value = ej;
+        option.textContent = `Ejercicio ${ej}`;
+        select.appendChild(option);
+      });
+
+      if (ejerciciosUnicos.length > 0) {
+        select.value = ejerciciosUnicos[ejerciciosUnicos.length - 1];
+        cargarGraficaHorner();
+      }
+    })
+    .catch(error => console.error("Error actualizando select Horner:", error));
+}
+
+function cargarGraficaHorner() {
+  const ejercicio = document.getElementById('ejercicioSelectHorner').value;
+  const iframe = document.getElementById('grafica-interactiva-horner');
+  
+  if (ejercicio && iframe) {
+    iframe.src = `/static/imagenes/horner_${ejercicio}.html?t=${Date.now()}`;
+  }
+}
+
+// Cargar al iniciar la página
+window.addEventListener('load', () => {
+  cargarResultadosHorner();
+  actualizarSelectHorner();
+});
+
+
 window.addEventListener('load', function () {
   cargarResultados();         // Bisección
   cargarResultadosFalsa();    // Falsa Posición
   cargarResultadosPuntoFijo(); // Punto Fijo
   cargarResultadosNewton();    // Newton-Raphson
-  cargarResultadosSecante(); 
-  cargarResultadosNewtonSistemas(); 
-  cargarrResultadosMuller();    // Müller
-  
+  cargarResultadosSecante();
+  cargarResultadosNewtonSistemas();
+  cargarResultadosMuller();    // Müller
 });
 
 

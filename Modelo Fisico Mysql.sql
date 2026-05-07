@@ -122,7 +122,15 @@ CREATE TABLE metodo_muller (
 );
 
 
-
+CREATE TABLE metodo_horner (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejercicio INT NOT NULL,
+    iteracion INT NOT NULL,
+    coeficientes JSON NOT NULL,
+    x DOUBLE NOT NULL,
+    es DOUBLE NOT NULL,
+    resultado DOUBLE NOT NULL
+);
 
 
 Drop table metodo_newton_sistemas
