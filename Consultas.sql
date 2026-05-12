@@ -10,5 +10,6 @@ SELECT * FROM metodo_newton_sistemas;
 SELECT * FROM metodo_secante;
 SELECT * FROM metodo_muller;
 SELECT * FROM metodo_bairstow;
+SELECT * FROM metodos_numericos.metodo_horner;
 
 SHOW TABLES;

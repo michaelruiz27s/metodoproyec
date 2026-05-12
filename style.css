@@ -287,6 +287,7 @@ section {
 .secante-scroll-section,
 .muller-scroll-section,
 .senl-scroll-section,
+.horner-scroll-section,
 .fin-scroll-section {
   height: auto;
   min-height: unset;
@@ -487,7 +488,8 @@ button[type="submit"]:hover {
 #tabla-resultados-secante,
 #tabla-resultados-muller,
 #tabla-resultados-newton-sistemas,
-#tabla-resultados-bairstow {
+#tabla-resultados-bairstow,
+#tabla-resultados-horner {
   min-width: 780px;
   border-collapse: collapse;
   font-family: var(--font-mono);
@@ -502,7 +504,8 @@ button[type="submit"]:hover {
 #tabla-resultados-secante th,
 #tabla-resultados-muller th,
 #tabla-resultados-newton-sistemas th,
-#tabla-resultados-bairstow th {
+#tabla-resultados-bairstow th,
+#tabla-resultados-horner th {
   background: var(--bg-2);
   color: var(--accent);
   font-family: var(--font-mono);

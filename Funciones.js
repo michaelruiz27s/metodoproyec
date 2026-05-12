@@ -1432,14 +1432,15 @@ async function exportarTodo() {
       fetch('/resultados-punto-fijo'),
       fetch('/resultados-newton/CLA'),
       fetch('/resultados-newton/MOD'),
-      fetch('/resultados-newton/NUM')
+      fetch('/resultados-newton/NUM'),
+      fetch('/resultados-horner')
     ]);
 
-    if (!resBiseccion.ok || !resFalsa.ok || !resPuntoFijo.ok || !resNewtonCla.ok || !resNewtonMod.ok || !resNewtonNum.ok) {
+    if (!resBiseccion.ok || !resFalsa.ok || !resPuntoFijo.ok || !resNewtonCla.ok || !resNewtonMod.ok || !resNewtonNum.ok || !resHorner.ok) {
       throw new Error('No se pudieron leer los datos almacenados.');
     }
 
-    const [dataBiseccion, dataFalsa, dataPuntoFijo, dataNewtonCla, dataNewtonMod, dataNewtonNum] = await Promise.all([
+    const [dataBiseccion, dataFalsa, dataPuntoFijo, dataNewtonCla, dataNewtonMod, dataNewtonNum,dataHorner] = await Promise.all([
       resBiseccion.json(),
       resFalsa.json(),
       resPuntoFijo.json(),
@@ -1455,7 +1456,8 @@ async function exportarTodo() {
       { id: 'tabla-resultados-puntofijo', nombre: 'PuntoFijo', filas: dataPuntoFijo },
       { id: 'tabla-resultados-newton', nombre: 'Newton_CLA', filas: dataNewtonCla },
       { id: 'tabla-resultados-newton', nombre: 'Newton_MOD', filas: dataNewtonMod },
-      { id: 'tabla-resultados-newton', nombre: 'Newton_NUM', filas: dataNewtonNum }
+      { id: 'tabla-resultados-newton', nombre: 'Newton_NUM', filas: dataNewtonNum },
+      { id: 'tabla-resultados-horner', nombre: 'Horner', filas: dataHorner }
     ];
 
     tablas.forEach(({ id, nombre, filas }) => {
@@ -1532,6 +1534,104 @@ window.addEventListener('load', () => {
       }
     });
 
+    // ==================== HORNER ====================
+function cargarResultadosHorner() {
+    fetch('http://127.0.0.1:5000/resultados-horner')
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.querySelector("#tabla-resultados-horner tbody");
+            tbody.innerHTML = "";
+            data.forEach(fila => {
+                const tr = tbody.insertRow();
+                fila.forEach(valor => {
+                    const td = tr.insertCell();
+                    td.textContent = valor;
+                });
+            });
+            actualizarSelectHorner(data);
+        });
+}
+
+function actualizarSelectHorner(data) {
+    const ejercicios = [...new Set(data.map(r => r[0]))];
+    const select = document.getElementById('ejercicioSelectHorner');
+    select.innerHTML = '';
+    ejercicios.forEach(ej => {
+        const opt = document.createElement('option');
+        opt.value = ej;
+        opt.textContent = `Ejercicio ${ej}`;
+        select.appendChild(opt);
+    });
+    if (ejercicios.length) {
+        select.value = ejercicios[ejercicios.length - 1];
+        cargarGraficaHorner();
+    }
+}
+
+function cargarGraficaHorner() {
+    const ej = document.getElementById('ejercicioSelectHorner').value;
+    document.getElementById('grafica-interactiva-horner').src =
+        `/static/imagenes/horner_${ej}.html?t=${Date.now()}`;
+}
+
+function eliminarEjercicioHorner(e) {
+    e.preventDefault();
+    const ej = document.getElementById('ejercicio-horner').value;
+    if (!ej) return alert("Ingresa número de ejercicio");
+    fetch(`http://127.0.0.1:5000/eliminar-horner/${ej}`, { method: 'DELETE' })
+        .then(r => r.text())
+        .then(msg => { alert(msg); cargarResultadosHorner(); });
+}
+
+function actualizarEjercicioHorner(e) {
+    e.preventDefault();
+    // Similar a los demás
+    const formData = new FormData(document.querySelector('form[action*="horner"]'));
+    fetch('http://127.0.0.1:5000/actualizar-horner', {
+        method: 'POST',
+        body: formData
+    }).then(() => cargarResultadosHorner());
+}
+
+function buscarPorEjercicioHorner(e) {
+    // Implementar si quieres búsqueda individual
+    cargarResultadosHorner();
+}
+
+document.getElementById("form-horner").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch("http://127.0.0.1:5000/horner", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.error) {
+            alert("❌ Error: " + data.error);
+            return;
+        }
+
+        alert(data.mensaje);
+
+        // 🔥 Recargar tabla automáticamente
+        cargarResultadosHorner();
+
+        // 🔥 Cargar gráfica directamente
+        if (data.imagen) {
+            document.getElementById("grafica-interactiva-horner").src =
+                data.imagen + "?t=" + new Date().getTime();
+        }
+
+    })
+    .catch(err => {
+        alert("Error al conectar con el servidor");
+    });
+});
+
   // Inicialización Newton
   if (document.getElementById("newtonTipo")) {
     cambiarTipoNewton();
@@ -1542,4 +1642,5 @@ window.addEventListener('load', () => {
   if (document.getElementById("form-secante")) cargarResultadosSecante();
   if (document.getElementById("form-muller")) cargarResultadosMuller();
   if (document.getElementById("form-bairstow")) cargarResultadosBairstow();
+  if (document.getElementById("form-horner")) cargarResultadosHorner();
 });

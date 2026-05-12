@@ -37,6 +37,7 @@
               <a href="#newton-sistemas">Newton (sistemas)</a>
               <a href="#muller">Müller</a>
               <a href="#bairstow">Bairstow</a>
+              <a href="#horner-section">Horner</a>
             </div>
 
             
@@ -597,6 +598,78 @@
       </div>
     </div>
   </section>
+
+   <!-- === MÉTODO DE HORNER === -->
+        <section id="horner-section" class="horner-scroll-section">
+            <div class="titulo-metodo">MÉTODO DE HORNER</div>
+
+            <div class="contenido-scroll">
+                <form id="form-horner">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ejercicio</label>
+                            <input type="number" name="ejercicio" id="ejercicio-horner" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Polinomio P(x)</label>
+                            <input type="text" name="polinomio" id="polinomio-horner" placeholder="x^3 - 6x^2 + 11x - 6"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label>X0</label>
+                            <input type="number" step="any" name="x0" id="x0-horner" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Es%</label>
+                            <input type="number" step="any" name="es" id="es-horner" value="0.001" required>
+                        </div>
+                    </div>
+
+                    <div class="botones-biseccion">
+                        <button type="button" onclick="buscarPorEjercicioHorner(event)">🔍 Buscar</button>
+                        <button type="button" onclick="eliminarEjercicioHorner(event)">🗑 Eliminar</button>
+                        <button type="submit">Calcular</button>
+                        <button type="button" onclick="actualizarEjercicioHorner(event)">Actualizar</button>
+                    </div>
+                </form>
+
+                <!-- Tabla de resultados -->
+                <div class="tabla-contenedor">
+                    <h2>Resultados - Horner</h2>
+                    <div class="tabla-scroll">
+                        <table id="tabla-resultados-horner">
+                            <thead>
+                                <tr>
+                                    <th>Ejercicio</th>
+                                    <th>Iter</th>
+                                    <th>Xi</th>
+                                    <th>f(Xi)</th>
+                                    <th>f'(Xi)</th>
+                                    <th>Xi+1</th>
+                                    <th>Ea (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="tabla-acciones">
+                        <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-horner', 'horner.xlsx', 'Horner')">
+                            Exportar a Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Gráfica -->
+                <div class="grafica-container">
+                    <h2>Gráfica del Método de Horner</h2>
+                    <div class="selector">
+                        <label>Seleccionar ejercicio:</label>
+                        <select id="ejercicioSelectHorner" onchange="cargarGraficaHorner()"></select>
+                    </div>
+                    <iframe id="grafica-interactiva-horner" frameborder="0"></iframe>
+                </div>
+            </div>
+        </section>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

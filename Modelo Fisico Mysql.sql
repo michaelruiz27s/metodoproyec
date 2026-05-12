@@ -92,6 +92,17 @@ CREATE TABLE IF NOT EXISTS metodo_newton_sistemas (
     ez DOUBLE
 );
 
+CREATE TABLE IF NOT EXISTS metodo_horner (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejercicio INT NOT NULL,
+    iteracion INT NOT NULL,
+    xi DOUBLE,
+    fxi DOUBLE,
+    dfxi DOUBLE,
+    xi_nuevo DOUBLE,
+    ea DOUBLE
+);
+
 CREATE TABLE IF NOT EXISTS metodo_bairstow (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ejercicio INT NOT NULL,
