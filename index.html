@@ -29,15 +29,20 @@
             <div class="submenu" id="abiertos">
               <a href="#punto-fijo">Punto fijo</a>
               <a href="#newton">Newton-Raphson</a>
-              <a href="#newton-sistemas">Newton (sistemas)</a>
               <a href="#secante">Secante</a>
+            </div>
+               <div class="menu-section">
+            <button type="button" class="menu-button" onclick="toggleSubmenu('otros metodos')">Otros Métodos</button>
+            <div class="submenu" id="otros metodos">
+              <a href="#newton-sistemas">Newton (sistemas)</a>
               <a href="#muller">Müller</a>
               <a href="#bairstow">Bairstow</a>
             </div>
-          </div>
-        </div>
 
-        <div class="sidebar-footer">
+            
+          </div>
+          </div>
+           <div class="sidebar-footer">
           <span class="sidebar-footer-kicker">Exportación</span>
           <button type="button" class="btn-export-workbook" onclick="exportarTodo()" title="Genera un Excel con las hojas Bisección y Falsa posición">
             <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
@@ -45,6 +50,10 @@
           </button>
         </div>
       </div>
+        </div>
+        </div>
+          
+        
 
     <div class="export-workbook-mobile" aria-label="Exportar ambos métodos">
       <button type="button" class="btn-export-workbook btn-export-workbook--compact" onclick="exportarTodo()" title="Exportar bisección y falsa posición en un solo Excel">
