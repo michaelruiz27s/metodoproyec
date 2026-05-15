@@ -87,8 +87,10 @@ function cargarResultados() {
     .then(response => response.json())
     .then(data => {
       const tbody = document.querySelector("#tabla-resultados tbody");
+      if (!tbody) return;
       tbody.innerHTML = "";
-      data.forEach(fila => {
+      const filas = Array.isArray(data) ? data : [];
+      filas.forEach(fila => {
         const tr = document.createElement("tr");
         fila.forEach(celda => {
           const td = document.createElement("td");
@@ -253,8 +255,10 @@ function actualizarSelect() {
   fetch('/resultados-biseccion')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
+      const filas = Array.isArray(data) ? data : [];
+      const ejerciciosUnicos = [...new Set(filas.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelect');
+      if (!select) return;
       select.innerHTML = '';
 
       ejerciciosUnicos.forEach(ej => {
@@ -270,7 +274,8 @@ function actualizarSelect() {
       } else {
         limpiarGraficaBiseccion();
       }
-    });
+    })
+    .catch(err => console.error("Error actualizando select bisección:", err));
 }
 
 function limpiarGraficaBiseccion() {
@@ -1426,7 +1431,7 @@ function exportarTabla(idTabla, nombreArchivo, nombreHoja) {
 
 async function exportarTodo() {
   try {
-    const [resBiseccion, resFalsa, resPuntoFijo, resNewtonCla, resNewtonMod, resNewtonNum] = await Promise.all([
+    const [resBiseccion, resFalsa, resPuntoFijo, resNewtonCla, resNewtonMod, resNewtonNum, resHorner] = await Promise.all([
       fetch('/resultados-biseccion'),
       fetch('/resultados-falsa-posicion'),
       fetch('/resultados-punto-fijo'),
@@ -1440,13 +1445,14 @@ async function exportarTodo() {
       throw new Error('No se pudieron leer los datos almacenados.');
     }
 
-    const [dataBiseccion, dataFalsa, dataPuntoFijo, dataNewtonCla, dataNewtonMod, dataNewtonNum,dataHorner] = await Promise.all([
+    const [dataBiseccion, dataFalsa, dataPuntoFijo, dataNewtonCla, dataNewtonMod, dataNewtonNum, dataHorner] = await Promise.all([
       resBiseccion.json(),
       resFalsa.json(),
       resPuntoFijo.json(),
       resNewtonCla.json(),
       resNewtonMod.json(),
-      resNewtonNum.json()
+      resNewtonNum.json(),
+      resHorner.json()
     ]);
 
     const wb = XLSX.utils.book_new();
@@ -1475,11 +1481,117 @@ async function exportarTodo() {
   }
 }
 
+// ==================== HORNER ====================
+function cargarResultadosHorner() {
+  fetch('http://127.0.0.1:5000/resultados-horner')
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-horner tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      const filas = Array.isArray(data) ? data : [];
+      filas.forEach(fila => {
+        const tr = tbody.insertRow();
+        const celdas = Array.isArray(fila) ? fila : Object.values(fila);
+        celdas.forEach(valor => {
+          const td = tr.insertCell();
+          td.textContent = valor;
+        });
+      });
+      actualizarSelectHorner(filas);
+    })
+    .catch(err => console.error("Error Horner:", err));
+}
+
+function actualizarSelectHorner(data) {
+  const filas = Array.isArray(data) ? data : [];
+  const ejercicios = [...new Set(filas.map(r => r[0]))];
+  const select = document.getElementById('ejercicioSelectHorner');
+  if (!select) return;
+  select.innerHTML = '';
+  ejercicios.forEach(ej => {
+    const opt = document.createElement('option');
+    opt.value = ej;
+    opt.textContent = `Ejercicio ${ej}`;
+    select.appendChild(opt);
+  });
+  if (ejercicios.length) {
+    select.value = ejercicios[ejercicios.length - 1];
+    cargarGraficaHorner();
+  }
+}
+
+function cargarGraficaHorner() {
+  const select = document.getElementById('ejercicioSelectHorner');
+  const frame = document.getElementById('grafica-interactiva-horner');
+  if (!select || !frame) return;
+  const ej = select.value;
+  if (!ej) return;
+  frame.src = `/static/imagenes/horner_${ej}.html?t=${Date.now()}`;
+}
+
+function eliminarEjercicioHorner(e) {
+  e.preventDefault();
+  const ej = document.getElementById('ejercicio-horner').value;
+  if (!ej) return mostrarNotificacion("Ingresa número de ejercicio", "warning");
+  fetch(`http://127.0.0.1:5000/eliminar-horner/${ej}`, { method: 'DELETE' })
+    .then(r => r.text())
+    .then(msg => {
+      mostrarNotificacion(msg, "success");
+      cargarResultadosHorner();
+    })
+    .catch(() => mostrarNotificacion("No se pudo eliminar.", "error"));
+}
+
+function actualizarEjercicioHorner(e) {
+  e.preventDefault();
+  const form = document.getElementById('form-horner');
+  if (!form) return mostrarNotificacion('No se encontró el formulario de Horner.', 'warning');
+  const formData = new FormData(form);
+  fetch('http://127.0.0.1:5000/actualizar-horner', {
+    method: 'POST',
+    body: formData
+  })
+    .then(() => cargarResultadosHorner())
+    .catch(() => mostrarNotificacion("No se pudo actualizar Horner.", "error"));
+}
+
+function buscarPorEjercicioHorner(e) {
+  cargarResultadosHorner();
+}
+
+const formHorner = document.getElementById("form-horner");
+if (formHorner) {
+  formHorner.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch("http://127.0.0.1:5000/horner", {
+      method: "POST",
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          mostrarNotificacion(data.error, "error");
+          return;
+        }
+        mostrarNotificacion(data.mensaje || "Horner completado.", "success");
+        cargarResultadosHorner();
+        if (data.imagen) {
+          const frame = document.getElementById("grafica-interactiva-horner");
+          if (frame) frame.src = data.imagen + "?t=" + Date.now();
+        }
+      })
+      .catch(() => mostrarNotificacion("Error al conectar con el servidor", "error"));
+  });
+}
+
 window.addEventListener('load', () => {
   fetch('/resultados-biseccion')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
+      const filas = Array.isArray(data) ? data : [];
+      const ejerciciosUnicos = [...new Set(filas.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelect');
       if (!select) return;
       ejerciciosUnicos.forEach(ej => {
@@ -1498,7 +1610,8 @@ window.addEventListener('load', () => {
   fetch('/resultados-falsa-posicion')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
+      const filas = Array.isArray(data) ? data : [];
+      const ejerciciosUnicos = [...new Set(filas.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelectFalsa');
       if (!select) return;
       ejerciciosUnicos.forEach(ej => {
@@ -1517,7 +1630,8 @@ window.addEventListener('load', () => {
   fetch('/resultados-punto-fijo')
     .then(res => res.json())
     .then(data => {
-      const ejerciciosUnicos = [...new Set(data.map(row => row[0]))];
+      const filas = Array.isArray(data) ? data : [];
+      const ejerciciosUnicos = [...new Set(filas.map(row => row[0]))];
       const select = document.getElementById('ejercicioSelectPuntoFijo');
       if (!select) return;
       ejerciciosUnicos.forEach(ej => {
@@ -1534,104 +1648,6 @@ window.addEventListener('load', () => {
       }
     });
 
-    // ==================== HORNER ====================
-function cargarResultadosHorner() {
-    fetch('http://127.0.0.1:5000/resultados-horner')
-        .then(r => r.json())
-        .then(data => {
-            const tbody = document.querySelector("#tabla-resultados-horner tbody");
-            tbody.innerHTML = "";
-            data.forEach(fila => {
-                const tr = tbody.insertRow();
-                fila.forEach(valor => {
-                    const td = tr.insertCell();
-                    td.textContent = valor;
-                });
-            });
-            actualizarSelectHorner(data);
-        });
-}
-
-function actualizarSelectHorner(data) {
-    const ejercicios = [...new Set(data.map(r => r[0]))];
-    const select = document.getElementById('ejercicioSelectHorner');
-    select.innerHTML = '';
-    ejercicios.forEach(ej => {
-        const opt = document.createElement('option');
-        opt.value = ej;
-        opt.textContent = `Ejercicio ${ej}`;
-        select.appendChild(opt);
-    });
-    if (ejercicios.length) {
-        select.value = ejercicios[ejercicios.length - 1];
-        cargarGraficaHorner();
-    }
-}
-
-function cargarGraficaHorner() {
-    const ej = document.getElementById('ejercicioSelectHorner').value;
-    document.getElementById('grafica-interactiva-horner').src =
-        `/static/imagenes/horner_${ej}.html?t=${Date.now()}`;
-}
-
-function eliminarEjercicioHorner(e) {
-    e.preventDefault();
-    const ej = document.getElementById('ejercicio-horner').value;
-    if (!ej) return alert("Ingresa número de ejercicio");
-    fetch(`http://127.0.0.1:5000/eliminar-horner/${ej}`, { method: 'DELETE' })
-        .then(r => r.text())
-        .then(msg => { alert(msg); cargarResultadosHorner(); });
-}
-
-function actualizarEjercicioHorner(e) {
-    e.preventDefault();
-    // Similar a los demás
-    const formData = new FormData(document.querySelector('form[action*="horner"]'));
-    fetch('http://127.0.0.1:5000/actualizar-horner', {
-        method: 'POST',
-        body: formData
-    }).then(() => cargarResultadosHorner());
-}
-
-function buscarPorEjercicioHorner(e) {
-    // Implementar si quieres búsqueda individual
-    cargarResultadosHorner();
-}
-
-document.getElementById("form-horner").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    fetch("http://127.0.0.1:5000/horner", {
-        method: "POST",
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        if (data.error) {
-            alert("❌ Error: " + data.error);
-            return;
-        }
-
-        alert(data.mensaje);
-
-        // 🔥 Recargar tabla automáticamente
-        cargarResultadosHorner();
-
-        // 🔥 Cargar gráfica directamente
-        if (data.imagen) {
-            document.getElementById("grafica-interactiva-horner").src =
-                data.imagen + "?t=" + new Date().getTime();
-        }
-
-    })
-    .catch(err => {
-        alert("Error al conectar con el servidor");
-    });
-});
-
   // Inicialización Newton
   if (document.getElementById("newtonTipo")) {
     cambiarTipoNewton();
@@ -1643,4 +1659,33 @@ document.getElementById("form-horner").addEventListener("submit", function(e) {
   if (document.getElementById("form-muller")) cargarResultadosMuller();
   if (document.getElementById("form-bairstow")) cargarResultadosBairstow();
   if (document.getElementById("form-horner")) cargarResultadosHorner();
+  let currentSlide = 0;
+
+  window.abrirGuia = function() {
+    const modal = document.getElementById('modal-guia');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  window.cerrarGuia = function() {
+    const modal = document.getElementById('modal-guia');
+    if (modal) modal.style.display = 'none';
+  }
+
+  window.moverCarrusel = function(direccion) {
+    const track = document.querySelector('.carousel-track');
+    const slides = document.querySelectorAll('.carousel-slide');
+    const totalSlides = slides.length;
+
+    currentSlide = (currentSlide + direccion + totalSlides) % totalSlides;
+    const offset = currentSlide * -100;
+    if (track) track.style.transform = `translateX(${offset}%)`;
+  }
+
+// Cerrar modal al hacer clic fuera del contenido
+window.onclick = function(event) {
+  const modal = document.getElementById('modal-guia');
+  if (event.target == modal) {
+    cerrarGuia();
+  }
+}
 });

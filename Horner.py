@@ -79,7 +79,7 @@ def ejecutar_horner():
             i += 1
 
         # Guardar en BD
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
+        conn = mysql.connector.connect(host="localhost", user="root", password="", database="metodos_numericos")
         cursor = conn.cursor()
         
         cursor.execute("DELETE FROM metodo_horner WHERE ejercicio = %s", (ejercicio,))
@@ -134,7 +134,7 @@ def ejecutar_horner():
 @horner_bp.route('/resultados-horner')
 def ver_resultados_horner():
     try:
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
+        conn = mysql.connector.connect(host="localhost", user="root", password="", database="metodos_numericos")
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM metodo_horner ORDER BY ejercicio ASC, iteracion ASC")
         filas = cursor.fetchall()
@@ -148,7 +148,7 @@ def ver_resultados_horner():
 @horner_bp.route('/eliminar-horner/<int:ejercicio>', methods=['DELETE'])
 def eliminar_horner(ejercicio):
     try:
-        conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
+        conn = mysql.connector.connect(host="localhost", user="root", password="", database="metodos_numericos")
         cursor = conn.cursor()
         cursor.execute("DELETE FROM metodo_horner WHERE ejercicio = %s", (ejercicio,))
         conn.commit()
@@ -162,7 +162,7 @@ def eliminar_horner(ejercicio):
 @horner_bp.route('/actualizar-horner', methods=['POST'])
 def actualizar_horner():
     ejercicio = int(request.form['ejercicio'])
-    conn = mysql.connector.connect(host="localhost", user="root", password="david98", database="metodos_numericos")
+    conn = mysql.connector.connect(host="localhost", user="root", password="", database="metodos_numericos")
     cursor = conn.cursor()
     cursor.execute("DELETE FROM metodo_horner WHERE ejercicio = %s", (ejercicio,))
     conn.commit()

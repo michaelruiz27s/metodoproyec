@@ -589,6 +589,71 @@ button[type="submit"]:hover {
   box-shadow: 0 0 16px rgba(52, 211, 153, 0.2);
   transform: translateY(-1px);
 }
+/* Botón Info de Métodos */
+.btn-info-metodos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent-2);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.btn-info-metodos:hover {
+  background: var(--accent-2);
+  color: #000;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+/* Carrusel y Modal */
+.modal-aprendizaje {
+  background: var(--bg-card);
+  width: min(550px, 90%);
+  padding: 35px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--accent);
+  position: relative;
+}
+
+.carousel-container { overflow: hidden; }
+.carousel-track { display: flex; transition: transform 0.4s ease-in-out; }
+.carousel-slide { min-width: 100%; text-align: center; padding: 10px; }
+
+.formula-box {
+  background: var(--bg-2);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  border-bottom: 2px solid var(--accent);
+}
+
+.carousel-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+}
+
+.carousel-nav button {
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+}
 
 /* ── GRÁFICA CONTAINER ───────────────────── */
 .grafica-container {

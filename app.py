@@ -30,6 +30,10 @@ def funciones():
 def funciones_fix():
     return send_from_directory(basedir, 'Funciones_fix.js')
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(basedir, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 # Registrar blueprints
 app.register_blueprint(biseccion_bp)
 app.register_blueprint(falsa_bp)

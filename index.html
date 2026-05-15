@@ -39,11 +39,13 @@
               <a href="#bairstow">Bairstow</a>
               <a href="#horner-section">Horner</a>
             </div>
-
-            
           </div>
           </div>
            <div class="sidebar-footer">
+            <button type="button" class="btn-info-metodos" onclick="abrirGuia()">
+        <span>💡</span> Info de métodos
+    </button>
+            
           <span class="sidebar-footer-kicker">Exportación</span>
           <button type="button" class="btn-export-workbook" onclick="exportarTodo()" title="Genera un Excel con las hojas Bisección y Falsa posición">
             <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
@@ -53,8 +55,65 @@
       </div>
         </div>
         </div>
-          
-        
+
+  <div id="modal-guia" class="modal-overlay" style="display: none;">
+    <div class="modal-aprendizaje">
+      <button class="btn-cerrar-modal" onclick="cerrarGuia()">×</button>
+      <div class="carousel-container">
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <h3>Método de Bisección</h3>
+            <p>Método cerrado que divide el intervalo a la mitad. Garantiza convergencia si la función es continua y hay cambio de signo.</p>
+            <div class="formula-box">\[x_r = \frac{x_a + x_b}{2}\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Falsa Posición</h3>
+            <p>Mejora la bisección uniendo los puntos extremos con una línea recta para aproximar la raíz por interpolación lineal.</p>
+            <div class="formula-box">\[x_r = x_b - \frac{f(x_b)(x_a - x_b)}{f(x_a) - f(x_b)}\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Punto Fijo</h3>
+            <p>Transforma \(f(x)=0\) en \(x=g(x)\). El método converge si \(|g'(x)| < 1\) en el entorno de la raíz.</p>
+            <div class="formula-box">\[x_{i+1} = g(x_i)\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Newton-Raphson</h3>
+            <p>Utiliza la tangente de la función. Es el método más eficiente (convergencia cuadrática) pero requiere conocer la derivada.</p>
+            <div class="formula-box">\[x_{i+1} = x_i - \frac{f(x_i)}{f'(x_i)}\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Método de la Secante</h3>
+            <p>Similar a Newton, pero sustituye la derivada por una aproximación basada en dos puntos anteriores.</p>
+            <div class="formula-box">\[x_{i+1} = x_i - \frac{f(x_i)(x_{i-1} - x_i)}{f(x_{i-1}) - f(x_i)}\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Método de Müller</h3>
+            <p>Utiliza una parábola (polinomio de segundo grado) que pasa por tres puntos. Permite encontrar raíces complejas.</p>
+            <div class="formula-box">\[x_3 = x_2 + \frac{-2c}{b \pm \sqrt{b^2 - 4ac}}\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Método de Bairstow</h3>
+            <p>Específico para polinomios. Encuentra factores cuadráticos del tipo \(x^2 - rx - s\) para hallar raíces reales y complejas.</p>
+            <div class="formula-box">\[r = r + \Delta r, \quad s = s + \Delta s\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Regla de Horner</h3>
+            <p>Algoritmo para evaluar polinomios de forma eficiente reduciendo el número de multiplicaciones.</p>
+            <div class="formula-box">\[b_i = a_i + b_{i+1}x\]</div>
+          </div>
+          <div class="carousel-slide">
+            <h3>Newton para Sistemas</h3>
+            <p>Extensión para resolver múltiples ecuaciones no lineales simultáneamente usando la matriz Jacobiana.</p>
+            <div class="formula-box">\[[J]\{\Delta x\} = -\{f\}\]</div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button type="button" onclick="moverCarrusel(-1)">❮ Anterior</button>
+        <button type="button" onclick="moverCarrusel(1)">Siguiente ❯</button>
+      </div>
+    </div>
+  </div>
 
     <div class="export-workbook-mobile" aria-label="Exportar ambos métodos">
       <button type="button" class="btn-export-workbook btn-export-workbook--compact" onclick="exportarTodo()" title="Exportar bisección y falsa posición en un solo Excel">
@@ -672,6 +731,8 @@
         </section>
 </div>
 
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="Funciones.js"></script>
 <script src="Funciones_fix.js"></script>

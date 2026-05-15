@@ -16,7 +16,7 @@ def _db():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="david98",
+        password="",
         database="metodos_numericos",
     )
 
