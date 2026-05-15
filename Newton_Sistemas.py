@@ -105,42 +105,86 @@ def _compilar(expr: str, etiqueta: str):
         ctx["x"] = x
         ctx["y"] = y
         ctx["z"] = z
-        val = eval(codigo, {"__builtins__": {}}, ctx)
+        try:
+            val = eval(codigo, {"__builtins__": {}}, ctx)
+        except Exception as e:
+            raise ValueError(f"{etiqueta} error en evaluación: {str(e)}")
+        
+        # Manejo de valores complejos
         if isinstance(val, complex):
             if abs(val.imag) > 1e-10:
-                raise ValueError(f"{etiqueta} produjo un valor no real.")
+                raise ValueError(f"{etiqueta} produjo un valor no real (parte imaginaria: {val.imag}).")
             val = val.real
-        val = float(val)
+        
+        # Conversión segura a float
+        try:
+            val = float(val)
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"{etiqueta} no puede convertirse a número: {str(e)}")
+        
+        # Validación de finitud
         if not math.isfinite(val):
-            raise ValueError(f"{etiqueta} produjo un valor no finito.")
+            raise ValueError(f"{etiqueta} produjo un valor no finito (inf/nan).")
+        
         return val
 
     return fn
 
 
 def _jacobiano_num(F, x, y, z):
+    """Calcula el Jacobiano numéricamente con validación de tipos"""
     h = 1e-5
-    fx, fy, fz = F(x, y, z)
-    fx_xp, fy_xp, fz_xp = F(x + h, y, z)
-    fx_xm, fy_xm, fz_xm = F(x - h, y, z)
-    fx_yp, fy_yp, fz_yp = F(x, y + h, z)
-    fx_ym, fy_ym, fz_ym = F(x, y - h, z)
-    fx_zp, fy_zp, fz_zp = F(x, y, z + h)
-    fx_zm, fy_zm, fz_zm = F(x, y, z - h)
+    try:
+        # Evaluación en el punto (x, y, z)
+        fx, fy, fz = F(x, y, z)
+        fx, fy, fz = float(fx), float(fy), float(fz)
+        
+        # Derivada respecto a x
+        fx_xp, fy_xp, fz_xp = F(x + h, y, z)
+        fx_xp, fy_xp, fz_xp = float(fx_xp), float(fy_xp), float(fz_xp)
+        
+        fx_xm, fy_xm, fz_xm = F(x - h, y, z)
+        fx_xm, fy_xm, fz_xm = float(fx_xm), float(fy_xm), float(fz_xm)
+        
+        # Derivada respecto a y
+        fx_yp, fy_yp, fz_yp = F(x, y + h, z)
+        fx_yp, fy_yp, fz_yp = float(fx_yp), float(fy_yp), float(fz_yp)
+        
+        fx_ym, fy_ym, fz_ym = F(x, y - h, z)
+        fx_ym, fy_ym, fz_ym = float(fx_ym), float(fy_ym), float(fz_ym)
+        
+        # Derivada respecto a z
+        fx_zp, fy_zp, fz_zp = F(x, y, z + h)
+        fx_zp, fy_zp, fz_zp = float(fx_zp), float(fy_zp), float(fz_zp)
+        
+        fx_zm, fy_zm, fz_zm = F(x, y, z - h)
+        fx_zm, fy_zm, fz_zm = float(fx_zm), float(fy_zm), float(fz_zm)
 
-    j11 = (fx_xp - fx_xm) / (2 * h)
-    j21 = (fy_xp - fy_xm) / (2 * h)
-    j31 = (fz_xp - fz_xm) / (2 * h)
+        # Cálculo de derivadas parciales
+        j11 = (fx_xp - fx_xm) / (2 * h)
+        j21 = (fy_xp - fy_xm) / (2 * h)
+        j31 = (fz_xp - fz_xm) / (2 * h)
 
-    j12 = (fx_yp - fx_ym) / (2 * h)
-    j22 = (fy_yp - fy_ym) / (2 * h)
-    j32 = (fz_yp - fz_ym) / (2 * h)
+        j12 = (fx_yp - fx_ym) / (2 * h)
+        j22 = (fy_yp - fy_ym) / (2 * h)
+        j32 = (fz_yp - fz_ym) / (2 * h)
 
-    j13 = (fx_zp - fx_zm) / (2 * h)
-    j23 = (fy_zp - fy_zm) / (2 * h)
-    j33 = (fz_zp - fz_zm) / (2 * h)
+        j13 = (fx_zp - fx_zm) / (2 * h)
+        j23 = (fy_zp - fy_zm) / (2 * h)
+        j33 = (fz_zp - fz_zm) / (2 * h)
 
-    return np.array([[j11, j12, j13], [j21, j22, j23], [j31, j32, j33]], dtype=float)
+        # Crear matriz y validar
+        jacobiano = np.array([[j11, j12, j13], [j21, j22, j23], [j31, j32, j33]], dtype=float)
+        
+        if not np.all(np.isfinite(jacobiano)):
+            raise ValueError("El Jacobiano contiene valores infinitos o NaN")
+            
+        return jacobiano
+        
+    except ValueError as e:
+        raise e
+    except Exception as e:
+        raise ValueError(f"Error al calcular el Jacobiano: {str(e)}")
 
 
 def _guardar(ejercicio: int, filas):
@@ -210,15 +254,31 @@ def ejecutar_newton_sistemas():
 
         filas = []
         for it in range(1, MAX_ITER + 1):
-            fx, fy, fz = F(x, y, z)
-            J = _jacobiano_num(F, x, y, z)
+            try:
+                fx, fy, fz = F(x, y, z)
+                fx, fy, fz = float(fx), float(fy), float(fz)
+            except Exception as e:
+                raise ValueError(f"Error evaluando funciones en iteración {it}: {str(e)}")
+            
+            try:
+                J = _jacobiano_num(F, x, y, z)
+            except ValueError as e:
+                raise e
+            
             b = -np.array([fx, fy, fz], dtype=float)
             try:
                 delta = np.linalg.solve(J, b)
             except np.linalg.LinAlgError:
                 raise ValueError("Jacobiano singular o mal condicionado en esta iteración.")
 
-            dx, dy, dz = float(delta[0]), float(delta[1]), float(delta[2])
+            # Conversión segura de delta a floats
+            try:
+                dx = float(np.real(delta[0]))
+                dy = float(np.real(delta[1]))
+                dz = float(np.real(delta[2]))
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"Error al convertir incrementos a float: {str(e)}")
+
             x_new, y_new, z_new = x + dx, y + dy, z + dz
             filas.append((ejercicio, it, x, y, z, fx, fy, fz, dx, dy, dz))
 
@@ -232,14 +292,20 @@ def ejecutar_newton_sistemas():
         imagen = ""
         try:
             imagen = _graficar(ejercicio, filas)
-        except Exception:
+        except Exception as e:
+            print(f"Error al graficar: {repr(e)}")
             imagen = ""
-        return jsonify({"mensaje": "Newton para sistemas guardado correctamente.", "imagen": imagen})
+        
+        return jsonify({
+            "mensaje": "Newton para sistemas guardado correctamente.",
+            "imagen": imagen,
+            "iteraciones": len(filas)
+        })
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         print("Error Newton sistemas:", repr(e))
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
 
 @newton_sis_bp.route("/resultados-newton-sistemas")
@@ -321,4 +387,3 @@ def actualizar_newton_sistemas():
         return jsonify({"error": "Ejercicio debe ser un número entero válido."}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
