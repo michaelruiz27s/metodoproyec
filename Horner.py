@@ -307,9 +307,16 @@ def ver_resultados_horner():
             password="",
             database="metodos_numericos"
         )
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT ejercicio, iteracion, xi, fxi, dfxi, xi_nuevo, ea 
+            SELECT 
+                ejercicio,
+                iteracion,
+                ROUND(xi, 10) as xi,
+                ROUND(fxi, 10) as fxi,
+                ROUND(dfxi, 10) as dfxi,
+                ROUND(xi_nuevo, 10) as xi_nuevo,
+                ROUND(ea, 8) as ea
             FROM metodo_horner 
             ORDER BY ejercicio ASC, iteracion ASC
         """)
@@ -333,7 +340,14 @@ def buscar_ejercicio_horner(ejercicio):
         )
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT ejercicio, iteracion, xi, fxi, dfxi, xi_nuevo, ea
+            SELECT 
+                ejercicio,
+                iteracion,
+                ROUND(xi, 10) as xi,
+                ROUND(fxi, 10) as fxi,
+                ROUND(dfxi, 10) as dfxi,
+                ROUND(xi_nuevo, 10) as xi_nuevo,
+                ROUND(ea, 8) as ea
             FROM metodo_horner 
             WHERE ejercicio = %s 
             ORDER BY iteracion ASC

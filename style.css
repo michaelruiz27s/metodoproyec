@@ -527,7 +527,8 @@ button[type="submit"]:hover {
 #tabla-resultados-secante td,
 #tabla-resultados-muller td,
 #tabla-resultados-newton-sistemas td,
-#tabla-resultados-bairstow td {
+#tabla-resultados-bairstow td,
+#tabla-resultados-horner td {
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   padding: 10px 16px;
@@ -545,7 +546,8 @@ button[type="submit"]:hover {
 #tabla-resultados-secante tr:nth-child(even) td,
 #tabla-resultados-muller tr:nth-child(even) td,
 #tabla-resultados-newton-sistemas tr:nth-child(even) td,
-#tabla-resultados-bairstow tr:nth-child(even) td {
+#tabla-resultados-bairstow tr:nth-child(even) td,
+#tabla-resultados-horner tr:nth-child(even) td {
   background: rgba(255,255,255,0.02);
 }
 
@@ -556,7 +558,8 @@ button[type="submit"]:hover {
 #tabla-resultados-secante tr:hover td,
 #tabla-resultados-muller tr:hover td,
 #tabla-resultados-newton-sistemas tr:hover td,
-#tabla-resultados-bairstow tr:hover td {
+#tabla-resultados-bairstow tr:hover td,
+#tabla-resultados-horner tr:hover td {
   background: rgba(245,158,11,0.06);
   color: var(--accent);
 }
