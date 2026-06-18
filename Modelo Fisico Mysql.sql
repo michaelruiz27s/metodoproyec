@@ -113,3 +113,23 @@ CREATE TABLE IF NOT EXISTS metodo_bairstow (
     ds DOUBLE,
     ea DOUBLE
 );
+
+CREATE TABLE IF NOT EXISTS metodo_jacobi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejercicio INT NOT NULL,
+    iteracion INT NOT NULL,
+    x1 DOUBLE,
+    x2 DOUBLE,
+    x3 DOUBLE,
+    ea DOUBLE
+);
+
+CREATE TABLE IF NOT EXISTS metodo_gauss_seidel (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejercicio INT NOT NULL,
+    iteracion INT NOT NULL,
+    x1 DOUBLE,
+    x2 DOUBLE,
+    x3 DOUBLE,
+    ea DOUBLE
+);

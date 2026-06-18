@@ -9,9 +9,15 @@ from Muller import muller_bp
 from Newton_Sistemas import newton_sis_bp
 from Bairstow import bairstow_bp
 from Horner import horner_bp
+from Jacobi import jacobi_bp
+from Gauss_Seidel import gauss_seidel_bp
+
+from database import init_database
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
+
+init_database()
 
 # Rutas estáticas
 @app.route('/')
@@ -43,7 +49,9 @@ app.register_blueprint(secante_bp)
 app.register_blueprint(muller_bp)
 app.register_blueprint(newton_sis_bp)
 app.register_blueprint(bairstow_bp)
-app.register_blueprint(horner_bp)   
+app.register_blueprint(horner_bp)
+app.register_blueprint(jacobi_bp)
+app.register_blueprint(gauss_seidel_bp)   
 
 
 

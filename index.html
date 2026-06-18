@@ -5,60 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="https://images.vexels.com/media/users/3/135555/isolated/preview/b45edb6f6eee6d71bcc54eb911e54f3b-icono-de-numeros-de-calculadora.png" type="image/png">
   <title>Métodos Numéricos</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
-<body>  
-    <div class="sidebar" aria-label="Navegación principal">
-        <div class="sidebar-brand">
-          <span class="brand-mark" aria-hidden="true">∫</span>
-          <div class="brand-text">
-            <span class="brand-title">Métodos numéricos</span>
-          </div>
-        </div>
-      
-        <div class="menu-wrapper">
-          <div class="menu-section">
-            <button type="button" class="menu-button" onclick="toggleSubmenu('cerrados')">Métodos cerrados</button>
-            <div class="submenu" id="cerrados">
-              <a href="#biseccion">Bisección</a>
-              <a href="#falsa">Falsa posición</a>
-            </div>
-          </div>
-          <div class="menu-section">
-            <button type="button" class="menu-button" onclick="toggleSubmenu('abiertos')">Métodos abiertos</button>
-            <div class="submenu" id="abiertos">
-              <a href="#punto-fijo">Punto fijo</a>
-              <a href="#newton">Newton-Raphson</a>
-              <a href="#secante">Secante</a>
-            </div>
-               <div class="menu-section">
-            <button type="button" class="menu-button" onclick="toggleSubmenu('otros metodos')">Otros Métodos</button>
-            <div class="submenu" id="otros metodos">
-              <a href="#newton-sistemas">Newton (sistemas)</a>
-              <a href="#muller">Müller</a>
-              <a href="#bairstow">Bairstow</a>
-              <a href="#horner-section">Horner</a>
-            </div>
-          </div>
-          </div>
-           <div class="sidebar-footer">
-            <button type="button" class="btn-info-metodos" onclick="abrirGuia()">
-        <span>💡</span> Info de métodos
-    </button>
-            
-          <span class="sidebar-footer-kicker">Exportación</span>
-          <button type="button" class="btn-export-workbook" onclick="exportarTodo()" title="Genera un Excel con las hojas Bisección y Falsa posición">
-            <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
-            Exportar libro
-          </button>
+<body>
+  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+    <div class="sidebar-brand">
+      <span class="brand-mark" aria-hidden="true">∫</span>
+      <div class="brand-text">
+        <span class="brand-title">Métodos numéricos</span>
+        <span class="brand-subtitle">Análisis &amp; cálculo</span>
+      </div>
+    </div>
+
+    <nav class="menu-wrapper">
+      <p class="menu-kicker">Inicio</p>
+      <a href="#inicio" class="submenu-link menu-home-link">Inicio</a>
+      <p class="menu-kicker">Métodos</p>
+      <div class="menu-section">
+        <button type="button" class="menu-button" data-menu="cerrados" onclick="toggleSubmenu('cerrados')">
+          <span class="menu-icon">⊞</span> Métodos cerrados
+        </button>
+        <div class="submenu" id="cerrados">
+          <a href="#biseccion">Bisección</a>
+          <a href="#falsa">Falsa posición</a>
         </div>
       </div>
+      <div class="menu-section">
+        <button type="button" class="menu-button" data-menu="abiertos" onclick="toggleSubmenu('abiertos')">
+          <span class="menu-icon">◎</span> Métodos abiertos
+        </button>
+        <div class="submenu" id="abiertos">
+          <a href="#punto-fijo">Punto fijo</a>
+          <a href="#newton">Newton-Raphson</a>
+          <a href="#secante">Secante</a>
         </div>
+      </div>
+      <div class="menu-section">
+        <button type="button" class="menu-button" data-menu="otros" onclick="toggleSubmenu('otros metodos')">
+          <span class="menu-icon">◈</span> Otros métodos
+        </button>
+        <div class="submenu" id="otros metodos">
+          <a href="#newton-sistemas">Newton (sistemas)</a>
+          <a href="#jacobi">Jacobi</a>
+          <a href="#gauss-seidel">Gauss-Seidel</a>
+          <a href="#muller">Müller</a>
+          <a href="#bairstow">Bairstow</a>
+          <a href="#horner-section">Horner</a>
         </div>
+      </div>
+    </nav>
 
-  <div id="modal-guia" class="modal-overlay" style="display: none;">
+    <div class="sidebar-footer">
+      <span class="sidebar-footer-kicker sidebar-footer-kicker--guia">Guía interactiva</span>
+      <button type="button" class="btn-info-metodos" id="btn-info-metodos" aria-haspopup="dialog">
+        <span class="btn-info-icon" aria-hidden="true">📖</span>
+        Info de métodos
+      </button>
+      <span class="sidebar-footer-kicker">Exportación</span>
+      <button type="button" class="btn-export-workbook" onclick="exportarTodo()" title="Exportar todos los métodos a Excel">
+        <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
+        Exportar libro
+      </button>
+    </div>
+  </aside>
+
+  <header class="mobile-header">
+    <button type="button" class="btn-mobile-menu" id="btn-menu-mobile" aria-label="Abrir menú">☰</button>
+    <span class="mobile-title">Métodos Numéricos</span>
+    <button type="button" class="btn-mobile-info" onclick="abrirGuia()" aria-label="Info de métodos">💡</button>
+  </header>
+
+  <div id="modal-guia" class="modal-overlay modal-guia-overlay" aria-hidden="true">
     <div class="modal-aprendizaje">
-      <button class="btn-cerrar-modal" onclick="cerrarGuia()">×</button>
+      <button type="button" class="btn-cerrar-modal" onclick="cerrarGuia()" aria-label="Cerrar">×</button>
+      <div class="carousel-header">
+        <span class="carousel-badge">Guía de métodos</span>
+        <span id="carousel-contador" class="carousel-contador">1 / 11</span>
+      </div>
       <div class="carousel-container">
         <div class="carousel-track">
           <div class="carousel-slide">
@@ -106,28 +131,58 @@
             <p>Extensión para resolver múltiples ecuaciones no lineales simultáneamente usando la matriz Jacobiana.</p>
             <div class="formula-box">\[[J]\{\Delta x\} = -\{f\}\]</div>
           </div>
+          <div class="carousel-slide">
+            <h3>Método de Jacobi</h3>
+            <p>Método iterativo para sistemas lineales \( A\mathbf{x} = \mathbf{b} \). Descompone \( A = D + L + U \) (diagonal, triangular inferior y superior). En cada paso, cada incógnita se recalcula con los valores <em>anteriores</em> de las demás. Converge si la matriz es diagonalmente dominante.</p>
+            <div class="formula-box">\[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j \neq i} a_{ij}\, x_j^{(k)} \right) \]</div>
+            <p class="slide-nota">Forma matricial: \( \mathbf{x}^{(k+1)} = D^{-1}\big(\mathbf{b} - (L+U)\mathbf{x}^{(k)}\big) \). El error disminuye iteración a iteración hasta alcanzar la tolerancia.</p>
+          </div>
+          <div class="carousel-slide">
+            <h3>Método de Gauss-Seidel</h3>
+            <p>Variante iterativa de Jacobi para \( A\mathbf{x} = \mathbf{b} \). A diferencia de Jacobi, usa los valores <em>ya actualizados</em> en la misma iteración (\( x_j^{(k+1)} \) para \( j &lt; i \)). Suele converger más rápido que Jacobi bajo las mismas condiciones.</p>
+            <div class="formula-box">\[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j=1}^{i-1} a_{ij}\, x_j^{(k+1)} - \sum_{j=i+1}^{n} a_{ij}\, x_j^{(k)} \right) \]</div>
+            <p class="slide-nota">Forma matricial: \( \mathbf{x}^{(k+1)} = (D+L)^{-1}\big(\mathbf{b} - U\mathbf{x}^{(k)}\big) \). Converge si la matriz es diagonalmente dominante.</p>
+          </div>
         </div>
       </div>
+      <div class="carousel-dots" id="carousel-dots" aria-label="Navegación del carrusel"></div>
       <div class="carousel-nav">
-        <button type="button" onclick="moverCarrusel(-1)">❮ Anterior</button>
-        <button type="button" onclick="moverCarrusel(1)">Siguiente ❯</button>
+        <button type="button" class="carousel-btn" onclick="moverCarrusel(-1)">❮ Anterior</button>
+        <button type="button" class="carousel-btn" onclick="moverCarrusel(1)">Siguiente ❯</button>
       </div>
     </div>
   </div>
 
     <div class="export-workbook-mobile" aria-label="Exportar ambos métodos">
-      <button type="button" class="btn-export-workbook btn-export-workbook--compact" onclick="exportarTodo()" title="Exportar bisección y falsa posición en un solo Excel">
+      <button type="button" class="btn-export-workbook btn-export-workbook--compact" onclick="exportarTodo()" title="Exportar todos los métodos a Excel">
         <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
         Libro Excel
       </button>
     </div>
 
 <div class="main-content">
-  
-    <hr class="linea-seccion">
-    
-  <section id="biseccion" class="biseccion-scroll-section">
-    <hr class="linea-seccion">
+
+  <section class="hero-section" id="inicio">
+    <div class="hero-content">
+      <p class="hero-badge">Plataforma interactiva</p>
+      <h1 class="hero-title">Métodos Numéricos</h1>
+      <p class="hero-desc">Calcula, visualiza y exporta resultados de 12 métodos en un solo lugar. Selecciona un método en el menú lateral o explora la guía interactiva.</p>
+      <div class="hero-actions">
+        <button type="button" class="hero-btn hero-btn-primary" onclick="abrirGuia()">Ver guía de métodos</button>
+        <a class="hero-btn hero-btn-secondary" href="#biseccion">Comenzar con Bisección</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>12</strong><span>Métodos</span></div>
+        <div class="hero-stat"><strong>MySQL</strong><span>Persistencia</span></div>
+        <div class="hero-stat"><strong>Excel</strong><span>Exportación</span></div>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="hero-orbit"><span>f(x)</span><span>∫</span><span>Δx</span><span>Σ</span></div>
+    </div>
+  </section>
+
+  <section id="biseccion" class="biseccion-scroll-section method-section">
     <div class="titulo-metodo">
       Método de bisección
     </div>
@@ -156,7 +211,7 @@
         </div>
       </div>
       <div class="botones-biseccion">
-        <button type="button" onclick="buscarPorEjercicio(event)">🔍 Buscar</button>
+        <button type="button" onclick="buscarPorEjercicio(event)">Buscar</button>
         <button type="button" onclick="eliminarEjercicio(event)"> Eliminar</button>
         <button type="submit"> Calcular</button>
         <button type="button" onclick="actualizarEjercicio(event)"> Actualizar</button>
@@ -201,7 +256,7 @@
   </section>
 
 
-  <section id="falsa" class="falsa-scroll-section">
+  <section id="falsa" class="falsa-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">
       Método de Falsa Posición
@@ -275,7 +330,7 @@
     </div>
   </section>
 
-  <section id="punto-fijo" class="puntofijo-scroll-section">
+  <section id="punto-fijo" class="puntofijo-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">
       Método de Punto Fijo
@@ -342,7 +397,7 @@
     </div>
   </section>
 
-  <section id="newton" class="newton-scroll-section">
+  <section id="newton" class="newton-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">
       Método de Newton-Raphson
@@ -424,13 +479,13 @@
     </div>
   </section>
 
-  <section id="newton-sistemas" class="senl-scroll-section">
+  <section id="newton-sistemas" class="senl-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">
       Newton-Raphson para Sistemas (3 variables)
     </div>
     <div class="contenido-scroll">
-      <form action="http://127.0.0.1:5000/newton-sistemas" method="POST" id="form-newton-sistemas">
+      <form action="/newton-sistemas" method="POST" id="form-newton-sistemas">
         <div class="form-row">
           <div class="form-group">
             <label for="ejercicio-ns">Ejercicio</label>
@@ -513,7 +568,147 @@
     </div>
   </section>
 
-  <section id="secante" class="secante-scroll-section">
+  <section id="jacobi" class="jacobi-scroll-section method-section">
+    <hr class="linea-seccion">
+    <div class="titulo-metodo">Método de Jacobi (sistemas lineales 3×3)</div>
+    <div class="contenido-scroll">
+      <form method="POST" id="form-jacobi">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ej-jac">Ejercicio</label>
+            <input type="text" id="ej-jac" name="ejercicio">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="matriz-jac">Matriz A (filas con ;)</label>
+            <input type="text" id="matriz-jac" name="matriz" placeholder="4,-1,0;-1,4,-1;0,-1,4">
+          </div>
+          <div class="form-group">
+            <label for="b-jac">Vector b</label>
+            <input type="text" id="b-jac" name="b" placeholder="1,2,3">
+          </div>
+          <div class="form-group">
+            <label for="x0-jac">Vector x⁽⁰⁾</label>
+            <input type="text" id="x0-jac" name="x0" placeholder="0,0,0">
+          </div>
+          <div class="form-group">
+            <label for="es-jac">Es%</label>
+            <input type="text" id="es-jac" name="es" value="0.001">
+          </div>
+        </div>
+        <div class="botones-biseccion">
+          <button type="button" onclick="buscarPorEjercicioJacobi(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicioJacobi(event)">Eliminar</button>
+          <button type="submit">Calcular</button>
+          <button type="button" onclick="actualizarEjercicioJacobi(event)">Actualizar</button>
+        </div>
+      </form>
+
+      <div class="tabla-contenedor">
+        <h2>Resultados del Método de Jacobi</h2>
+        <div class="tabla-scroll">
+          <table id="tabla-resultados-jacobi">
+            <thead>
+              <tr>
+                <th>Ejercicio</th>
+                <th>Iteración</th>
+                <th>x<sub>1</sub></th>
+                <th>x<sub>2</sub></th>
+                <th>x<sub>3</sub></th>
+                <th>Ea</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="tabla-acciones">
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-jacobi', 'jacobi_resultados.xlsx', 'Jacobi')">
+            Exportar esta tabla a Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="grafica-container">
+        <h2>Gráfica — Convergencia Jacobi</h2>
+        <div class="selector">
+          <label for="ejercicioSelectJacobi">Seleccionar ejercicio:</label>
+          <select id="ejercicioSelectJacobi" onchange="cargarGraficaJacobi()"></select>
+        </div>
+        <iframe id="grafica-interactiva-jacobi" style="width:100%; height:500px; border:none;"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section id="gauss-seidel" class="gauss-seidel-scroll-section method-section">
+    <hr class="linea-seccion">
+    <div class="titulo-metodo">Método de Gauss-Seidel (sistemas lineales 3×3)</div>
+    <div class="contenido-scroll">
+      <form method="POST" id="form-gauss-seidel">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ej-gs">Ejercicio</label>
+            <input type="text" id="ej-gs" name="ejercicio">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="matriz-gs">Matriz A (filas con ;)</label>
+            <input type="text" id="matriz-gs" name="matriz" placeholder="4,-1,0;-1,4,-1;0,-1,4">
+          </div>
+          <div class="form-group">
+            <label for="b-gs">Vector b</label>
+            <input type="text" id="b-gs" name="b" placeholder="1,2,3">
+          </div>
+          <div class="form-group">
+            <label for="x0-gs">Vector x⁽⁰⁾</label>
+            <input type="text" id="x0-gs" name="x0" placeholder="0,0,0">
+          </div>
+          <div class="form-group">
+            <label for="es-gs">Es%</label>
+            <input type="text" id="es-gs" name="es" value="0.001">
+          </div>
+        </div>
+        <div class="botones-biseccion">
+          <button type="button" onclick="buscarPorEjercicioGaussSeidel(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicioGaussSeidel(event)">Eliminar</button>
+          <button type="submit">Calcular</button>
+          <button type="button" onclick="actualizarEjercicioGaussSeidel(event)">Actualizar</button>
+        </div>
+      </form>
+
+      <div class="tabla-contenedor">
+        <h2>Resultados del Método de Gauss-Seidel</h2>
+        <div class="tabla-scroll">
+          <table id="tabla-resultados-gauss-seidel">
+            <thead>
+              <tr>
+                <th>Ejercicio</th>
+                <th>Iteración</th>
+                <th>x<sub>1</sub></th>
+                <th>x<sub>2</sub></th>
+                <th>x<sub>3</sub></th>
+                <th>Ea</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="tabla-acciones">
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-gauss-seidel', 'gauss_seidel_resultados.xlsx', 'GaussSeidel')">
+            Exportar esta tabla a Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="grafica-container">
+        <h2>Gráfica — Convergencia Gauss-Seidel</h2>
+        <div class="selector">
+          <label for="ejercicioSelectGaussSeidel">Seleccionar ejercicio:</label>
+          <select id="ejercicioSelectGaussSeidel" onchange="cargarGraficaGaussSeidel()"></select>
+        </div>
+        <iframe id="grafica-interactiva-gauss-seidel" style="width:100%; height:500px; border:none;"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section id="secante" class="secante-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de la Secante</div>
     <div class="contenido-scroll">
@@ -561,7 +756,7 @@
     </div>
   </section>
 
-  <section id="muller" class="muller-scroll-section">
+  <section id="muller" class="muller-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de Müller</div>
     <div class="contenido-scroll">
@@ -610,7 +805,7 @@
     </div>
   </section>
 
-  <section id="bairstow" class="bairstow-scroll-section">
+  <section id="bairstow" class="bairstow-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de Bairstow (polinomios)</div>
     <div class="contenido-scroll">
@@ -659,33 +854,34 @@
   </section>
 
    <!-- === MÉTODO DE HORNER === -->
-        <section id="horner-section" class="horner-scroll-section">
+        <section id="horner-section" class="horner-scroll-section method-section">
+            <hr class="linea-seccion">
             <div class="titulo-metodo">MÉTODO DE HORNER</div>
 
             <div class="contenido-scroll">
-                <form id="form-horner">
+                <form id="form-horner" action="/horner" method="POST">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Ejercicio</label>
+                            <label for="ejercicio-horner">Ejercicio</label>
                             <input type="number" name="ejercicio" id="ejercicio-horner" required>
                         </div>
-                        <div class="form-group">
-                            <label>Polinomio P(x)</label>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="polinomio-horner">Polinomio P(x)</label>
                             <input type="text" name="polinomio" id="polinomio-horner" placeholder="x^3 - 6x^2 + 11x - 6"
                                 required>
                         </div>
                         <div class="form-group">
-                            <label>X0</label>
+                            <label for="x0-horner">X0</label>
                             <input type="number" step="any" name="x0" id="x0-horner" required>
                         </div>
                         <div class="form-group">
-                            <label>Es%</label>
+                            <label for="es-horner">Es%</label>
                             <input type="number" step="any" name="es" id="es-horner" value="0.001" required>
                         </div>
                     </div>
 
                     <div class="botones-biseccion">
-                        <button type="button" onclick="buscarPorEjercicioHorner(event)">🔍 Buscar</button>
+                        <button type="button" onclick="buscarPorEjercicioHorner(event)">Buscar</button>
                         <button type="button" onclick="eliminarEjercicioHorner(event)">🗑 Eliminar</button>
                         <button type="submit">Calcular</button>
                         <button type="button" onclick="actualizarEjercicioHorner(event)">Actualizar</button>
@@ -722,19 +918,24 @@
                 <div class="grafica-container">
                     <h2>Gráfica del Método de Horner</h2>
                     <div class="selector">
-                        <label>Seleccionar ejercicio:</label>
+                        <label for="ejercicioSelectHorner">Seleccionar ejercicio:</label>
                         <select id="ejercicioSelectHorner" onchange="cargarGraficaHorner()"></select>
                     </div>
-                    <iframe id="grafica-interactiva-horner" frameborder="0"></iframe>
+                    <iframe id="grafica-interactiva-horner" style="width:100%; height:500px; border:none;" frameborder="0"></iframe>
                 </div>
             </div>
         </section>
+
+  <footer class="app-footer">
+    <p>Métodos Numéricos — Proyecto académico</p>
+    <p>Flask · MySQL · Plotly · Exportación Excel</p>
+  </footer>
 </div>
 
 <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="Funciones.js"></script>
+<script src="Funciones.js?v=4"></script>
 <script src="Funciones_fix.js"></script>
 </body>
 </html>

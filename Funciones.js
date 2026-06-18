@@ -1,9 +1,184 @@
 function toggleSubmenu(id) {
   const submenu = document.getElementById(id);
-  const isVisible = submenu.style.display === 'block';
+  if (!submenu) return;
 
-  submenu.style.display = isVisible ? 'none' : 'block';
+  const isOpen = submenu.classList.contains("submenu-open");
+  document.querySelectorAll(".submenu.submenu-open").forEach((el) => {
+    if (el !== submenu) el.classList.remove("submenu-open");
+  });
+  submenu.classList.toggle("submenu-open", !isOpen);
 }
+
+function initMobileNav() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  const btnMenu = document.getElementById("btn-menu-mobile");
+  if (!sidebar || !overlay || !btnMenu) return;
+
+  const openNav = () => {
+    sidebar.classList.add("sidebar-open");
+    overlay.classList.add("active");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("nav-open");
+  };
+
+  const closeNav = () => {
+    sidebar.classList.remove("sidebar-open");
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("nav-open");
+  };
+
+  btnMenu.addEventListener("click", () => {
+    if (sidebar.classList.contains("sidebar-open")) closeNav();
+    else openNav();
+  });
+
+  overlay.addEventListener("click", closeNav);
+
+  document.querySelectorAll('.menu-wrapper a[href^="#"]').forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 900) closeNav();
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900) closeNav();
+  });
+}
+
+function initScrollSpy() {
+  const links = Array.from(document.querySelectorAll('.menu-wrapper a[href^="#"]'));
+  if (!links.length || !("IntersectionObserver" in window)) return;
+
+  const sectionMap = new Map();
+  links.forEach((link) => {
+    const id = link.getAttribute("href").slice(1);
+    const section = document.getElementById(id);
+    if (section) sectionMap.set(id, { link, section });
+  });
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        links.forEach((l) => l.classList.remove("active"));
+        const match = sectionMap.get(entry.target.id);
+        if (!match) return;
+        match.link.classList.add("active");
+        const submenu = match.link.closest(".submenu");
+        if (submenu) submenu.classList.add("submenu-open");
+      });
+    },
+    { rootMargin: "-35% 0px -50% 0px", threshold: 0.05 }
+  );
+
+  sectionMap.forEach(({ section }) => observer.observe(section));
+}
+
+/* ── Carrusel / Guía de métodos ───────────────── */
+let guiaSlideActual = 0;
+
+function typesetMathJaxGuia() {
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise().catch(() => {});
+  }
+}
+
+function actualizarCarruselGuia(animDir) {
+  const track = document.querySelector(".carousel-track");
+  const slides = document.querySelectorAll(".carousel-slide");
+  const dots = document.querySelectorAll(".carousel-dot");
+  const contador = document.getElementById("carousel-contador");
+  const totalSlides = slides.length;
+
+  if (track) track.style.transform = `translateX(${guiaSlideActual * -100}%)`;
+
+  slides.forEach((slide, i) => {
+    slide.classList.toggle("slide-active", i === guiaSlideActual);
+    if (i === guiaSlideActual && animDir) {
+      slide.classList.remove("slide-enter-left", "slide-enter-right");
+      void slide.offsetWidth;
+      slide.classList.add(animDir > 0 ? "slide-enter-right" : "slide-enter-left");
+    }
+  });
+
+  dots.forEach((dot, i) => dot.classList.toggle("dot-active", i === guiaSlideActual));
+  if (contador) contador.textContent = `${guiaSlideActual + 1} / ${totalSlides}`;
+  typesetMathJaxGuia();
+}
+
+function initCarouselGuia() {
+  const dotsHost = document.getElementById("carousel-dots");
+  const slides = document.querySelectorAll(".carousel-slide");
+  if (!dotsHost || !slides.length) return;
+
+  dotsHost.innerHTML = "";
+  slides.forEach((_, i) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "carousel-dot" + (i === 0 ? " dot-active" : "");
+    dot.setAttribute("aria-label", `Ir al método ${i + 1}`);
+    dot.addEventListener("click", () => {
+      const dir = i > guiaSlideActual ? 1 : -1;
+      guiaSlideActual = i;
+      actualizarCarruselGuia(dir);
+    });
+    dotsHost.appendChild(dot);
+  });
+  actualizarCarruselGuia(0);
+}
+
+function cerrarNavMovilSiAbierto() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (!sidebar || !sidebar.classList.contains("sidebar-open")) return;
+  sidebar.classList.remove("sidebar-open");
+  overlay?.classList.remove("active");
+  overlay?.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("nav-open");
+}
+
+function abrirGuia() {
+  const modal = document.getElementById("modal-guia");
+  if (!modal) return;
+
+  cerrarNavMovilSiAbierto();
+  guiaSlideActual = 0;
+  initCarouselGuia();
+  actualizarCarruselGuia(1);
+
+  modal.setAttribute("aria-hidden", "false");
+  modal.classList.add("modal-visible");
+  document.body.classList.add("modal-abierto");
+
+  const cerrarBtn = modal.querySelector(".btn-cerrar-modal");
+  if (cerrarBtn) cerrarBtn.focus();
+}
+
+function cerrarGuia() {
+  const modal = document.getElementById("modal-guia");
+  if (!modal) return;
+  modal.classList.remove("modal-visible");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-abierto");
+}
+
+function moverCarrusel(direccion) {
+  const slides = document.querySelectorAll(".carousel-slide");
+  const totalSlides = slides.length;
+  if (!totalSlides) return;
+  guiaSlideActual = (guiaSlideActual + direccion + totalSlides) % totalSlides;
+  actualizarCarruselGuia(direccion);
+}
+
+window.abrirGuia = abrirGuia;
+window.cerrarGuia = cerrarGuia;
+window.moverCarrusel = moverCarrusel;
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btn-info-metodos")?.addEventListener("click", abrirGuia);
+});
 
 function mostrarNotificacion(mensaje, tipo = "info") {
   let host = document.getElementById("notificaciones-app");
@@ -913,24 +1088,43 @@ function actualizarSelectNewtonSistemas() {
 }
 
 function cargarResultadosNewtonSistemas() {
-  fetch('http://127.0.0.1:5000/resultados-newton-sistemas')
+  fetch('/resultados-newton-sistemas')
     .then(r => r.json())
     .then(data => {
       const tbody = document.querySelector("#tabla-resultados-newton-sistemas tbody");
       if (!tbody) return;
       tbody.innerHTML = "";
-      (data || []).forEach(fila => {
+      const filas = Array.isArray(data) ? data : [];
+      filas.forEach(fila => {
         const tr = document.createElement("tr");
-        fila.forEach(c => {
+        const valores = Array.isArray(fila)
+          ? fila
+          : [
+              fila.ejercicio ?? fila['ejercicio'] ?? '',
+              fila.iteracion ?? fila['iteracion'] ?? '',
+              fila.x ?? fila['x'] ?? '',
+              fila.y ?? fila['y'] ?? '',
+              fila.z ?? fila['z'] ?? '',
+              fila.fx ?? fila['fx'] ?? '',
+              fila.fy ?? fila['fy'] ?? '',
+              fila.fz ?? fila['fz'] ?? '',
+              fila.ex ?? fila['ex'] ?? '',
+              fila.ey ?? fila['ey'] ?? '',
+              fila.ez ?? fila['ez'] ?? ''
+            ];
+        valores.forEach(c => {
           const td = document.createElement("td");
           td.textContent = c;
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
+      actualizarSelectNewtonSistemas();
     })
-    .catch(err => console.error("Error Newton sistemas:", err));
-  actualizarSelectNewtonSistemas();
+    .catch(err => {
+      console.error("Error Newton sistemas:", err);
+      actualizarSelectNewtonSistemas();
+    });
 }
 
 function buscarPorEjercicioNewtonSistemas(event) {
@@ -972,7 +1166,7 @@ async function eliminarEjercicioNewtonSistemas(event) {
   }
   const ok = await confirmarAccion("Confirmar eliminación", `Se eliminarán los registros del ejercicio #${ejercicio}.`);
   if (!ok) return;
-  fetch(`http://127.0.0.1:5000/eliminar-newton-sistemas/${ejercicio}`, { method: "DELETE" })
+  fetch(`/eliminar-newton-sistemas/${ejercicio}`, { method: "DELETE" })
     .then(leerRespuestaServidor)
     .then(({ ok, payload }) => {
       if (!ok) throw new Error(payload?.error || "No se pudo eliminar.");
@@ -987,7 +1181,7 @@ function actualizarEjercicioNewtonSistemas(event) {
   const form = document.getElementById("form-newton-sistemas");
   if (!form) return;
   const formData = new FormData(form);
-  fetch("http://127.0.0.1:5000/actualizar-newton-sistemas", { method: "POST", body: formData })
+  fetch("/actualizar-newton-sistemas", { method: "POST", body: formData })
     .then(leerRespuestaServidor)
     .then(({ ok, payload }) => {
       if (!ok) throw new Error(payload?.error || "No se pudo actualizar.");
@@ -1002,7 +1196,7 @@ if (formNewtonSistemas) {
   formNewtonSistemas.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new FormData(formNewtonSistemas);
-    fetch("http://127.0.0.1:5000/newton-sistemas", { method: "POST", body: formData })
+    fetch("/newton-sistemas", { method: "POST", body: formData })
       .then(leerRespuestaServidor)
       .then(({ ok, payload }) => {
         if (!ok) throw new Error(payload?.error || "No se pudo calcular.");
@@ -1011,6 +1205,304 @@ if (formNewtonSistemas) {
       })
       .catch(err => mostrarNotificacion(err.message || "No se pudo calcular.", "error"));
   });
+}
+
+// -------- Jacobi
+function formatearCeldaJacobi(valor, indice) {
+  if (indice <= 1) return valor;
+  const n = Number(valor);
+  if (Number.isNaN(n)) return valor;
+  return Number(n.toFixed(6));
+}
+
+function limpiarGraficaJacobi() {
+  const frame = document.getElementById('grafica-interactiva-jacobi');
+  if (!frame) return;
+  frame.srcdoc = `
+    <html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100%;background:#161b27;color:#8492a6;font-family:Arial,sans-serif;">
+      No hay datos disponibles para mostrar la gráfica.
+    </body></html>
+  `;
+}
+
+function cargarGraficaJacobi() {
+  const ejercicio = document.getElementById('ejercicioSelectJacobi')?.value;
+  if (!ejercicio) return limpiarGraficaJacobi();
+  const frame = document.getElementById('grafica-interactiva-jacobi');
+  frame.removeAttribute('srcdoc');
+  frame.src = `/static/imagenes/jacobi_${ejercicio}.html?t=${Date.now()}`;
+}
+
+function actualizarSelectJacobi() {
+  fetch('/resultados-jacobi')
+    .then(r => r.json())
+    .then(data => {
+      const ejercicios = [...new Set((data || []).map(row => row[0]))];
+      const sel = document.getElementById('ejercicioSelectJacobi');
+      if (!sel) return;
+      sel.innerHTML = '';
+      ejercicios.forEach(ej => {
+        const o = document.createElement('option');
+        o.value = ej;
+        o.textContent = `Ejercicio ${ej}`;
+        sel.appendChild(o);
+      });
+      if (ejercicios.length) {
+        sel.value = ejercicios[ejercicios.length - 1];
+        cargarGraficaJacobi();
+      } else {
+        limpiarGraficaJacobi();
+      }
+    });
+}
+
+function cargarResultadosJacobi() {
+  fetch('/resultados-jacobi')
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-jacobi tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      (data || []).forEach(fila => {
+        const tr = document.createElement("tr");
+        fila.forEach((c, i) => {
+          const td = document.createElement("td");
+          td.textContent = formatearCeldaJacobi(c, i);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      actualizarSelectJacobi();
+    })
+    .catch(err => {
+      console.error("Error Jacobi:", err);
+      actualizarSelectJacobi();
+    });
+}
+
+function buscarPorEjercicioJacobi(event) {
+  event.preventDefault();
+  const ejercicio = document.getElementById("ej-jac")?.value;
+  if (!ejercicio) return mostrarNotificacion("Ingrese el número de ejercicio para buscar.", "warning");
+  fetch(`/buscar_ejercicio_jacobi/${ejercicio}`)
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-jacobi tbody");
+      tbody.innerHTML = "";
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No se encontraron resultados</td></tr>";
+        return;
+      }
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.ejercicio}</td><td>${row.iteracion}</td>
+          <td>${formatearCeldaJacobi(row.x1, 2)}</td><td>${formatearCeldaJacobi(row.x2, 3)}</td><td>${formatearCeldaJacobi(row.x3, 4)}</td><td>${formatearCeldaJacobi(row.ea, 5)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(() => mostrarNotificacion("No se pudo buscar el ejercicio.", "error"));
+}
+
+async function eliminarEjercicioJacobi(event) {
+  event.preventDefault();
+  const ejercicio = document.getElementById("ej-jac")?.value;
+  if (!ejercicio) return mostrarNotificacion("Ingrese el número de ejercicio a eliminar.", "warning");
+  const ok = await confirmarAccion("Eliminar ejercicio", `¿Eliminar todos los registros del ejercicio #${ejercicio}?`);
+  if (!ok) return;
+  fetch(`/eliminar-jacobi/${ejercicio}`, { method: "DELETE" })
+    .then(leerRespuestaServidor)
+    .then(({ ok, payload }) => {
+      if (!ok) throw new Error(payload?.error || "No se pudo eliminar.");
+      mostrarNotificacion(payload?.mensaje || "Eliminado.", "success");
+      cargarResultadosJacobi();
+    })
+    .catch(err => mostrarNotificacion(err.message || "No se pudo eliminar.", "error"));
+}
+
+function actualizarEjercicioJacobi(event) {
+  event.preventDefault();
+  const form = document.getElementById("form-jacobi");
+  const formData = new FormData(form);
+  fetch("/actualizar-jacobi", { method: "POST", body: formData })
+    .then(leerRespuestaServidor)
+    .then(({ ok, payload }) => {
+      if (!ok) throw new Error(payload?.error || "No se pudo actualizar.");
+      mostrarNotificacion(mensajeUsuarioActualizacion(payload), "success");
+      cargarResultadosJacobi();
+    })
+    .catch(err => mostrarNotificacion(err.message || "No se pudo actualizar.", "error"));
+}
+
+function registrarFormularioJacobi() {
+  const form = document.getElementById("form-jacobi");
+  if (!form || form.dataset.bound === "1") return;
+  form.dataset.bound = "1";
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    fetch("/jacobi", { method: "POST", body: formData })
+      .then(leerRespuestaServidor)
+      .then(({ ok, payload }) => {
+        if (!ok) throw new Error(payload?.error || "No se pudo calcular.");
+        const tipo = payload?.dominante === false ? "warning" : "success";
+        mostrarNotificacion(payload?.mensaje || "Jacobi completado.", tipo);
+        cargarResultadosJacobi();
+      })
+      .catch(err => mostrarNotificacion(err.message || "No se pudo calcular.", "error"));
+  });
+}
+
+function registrarFormularioGaussSeidel() {
+  const form = document.getElementById("form-gauss-seidel");
+  if (!form || form.dataset.bound === "1") return;
+  form.dataset.bound = "1";
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    fetch("/gauss-seidel", { method: "POST", body: formData })
+      .then(leerRespuestaServidor)
+      .then(({ ok, payload }) => {
+        if (!ok) throw new Error(payload?.error || "No se pudo calcular.");
+        const tipo = payload?.dominante === false ? "warning" : "success";
+        mostrarNotificacion(payload?.mensaje || "Gauss-Seidel completado.", tipo);
+        cargarResultadosGaussSeidel();
+        if (payload?.imagen) {
+          const frame = document.getElementById("grafica-interactiva-gauss-seidel");
+          if (frame) {
+            frame.removeAttribute("srcdoc");
+            frame.src = payload.imagen + "?t=" + Date.now();
+          }
+        }
+      })
+      .catch(err => mostrarNotificacion(err.message || "No se pudo calcular.", "error"));
+  });
+}
+
+// -------- Secante
+function formatearCeldaGaussSeidel(valor, indice) {
+  return formatearCeldaJacobi(valor, indice);
+}
+
+function limpiarGraficaGaussSeidel() {
+  const frame = document.getElementById('grafica-interactiva-gauss-seidel');
+  if (!frame) return;
+  frame.srcdoc = `
+    <html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100%;background:#161b27;color:#8492a6;font-family:Arial,sans-serif;">
+      No hay datos disponibles para mostrar la gráfica.
+    </body></html>
+  `;
+}
+
+function cargarGraficaGaussSeidel() {
+  const ejercicio = document.getElementById('ejercicioSelectGaussSeidel')?.value;
+  if (!ejercicio) return limpiarGraficaGaussSeidel();
+  const frame = document.getElementById('grafica-interactiva-gauss-seidel');
+  frame.removeAttribute('srcdoc');
+  frame.src = `/static/imagenes/gauss_seidel_${ejercicio}.html?t=${Date.now()}`;
+}
+
+function actualizarSelectGaussSeidel() {
+  fetch('/resultados-gauss-seidel')
+    .then(r => r.json())
+    .then(data => {
+      const ejercicios = [...new Set((data || []).map(row => row[0]))];
+      const sel = document.getElementById('ejercicioSelectGaussSeidel');
+      if (!sel) return;
+      sel.innerHTML = '';
+      ejercicios.forEach(ej => {
+        const o = document.createElement('option');
+        o.value = ej;
+        o.textContent = `Ejercicio ${ej}`;
+        sel.appendChild(o);
+      });
+      if (ejercicios.length) {
+        sel.value = ejercicios[ejercicios.length - 1];
+        cargarGraficaGaussSeidel();
+      } else {
+        limpiarGraficaGaussSeidel();
+      }
+    });
+}
+
+function cargarResultadosGaussSeidel() {
+  fetch('/resultados-gauss-seidel')
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-gauss-seidel tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      (data || []).forEach(fila => {
+        const tr = document.createElement("tr");
+        fila.forEach((c, i) => {
+          const td = document.createElement("td");
+          td.textContent = formatearCeldaGaussSeidel(c, i);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      actualizarSelectGaussSeidel();
+    })
+    .catch(err => {
+      console.error("Error Gauss-Seidel:", err);
+      actualizarSelectGaussSeidel();
+    });
+}
+
+function buscarPorEjercicioGaussSeidel(event) {
+  event.preventDefault();
+  const ejercicio = document.getElementById("ej-gs")?.value;
+  if (!ejercicio) return mostrarNotificacion("Ingrese el número de ejercicio para buscar.", "warning");
+  fetch(`/buscar_ejercicio_gauss_seidel/${ejercicio}`)
+    .then(r => r.json())
+    .then(data => {
+      const tbody = document.querySelector("#tabla-resultados-gauss-seidel tbody");
+      tbody.innerHTML = "";
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>No se encontraron resultados</td></tr>";
+        return;
+      }
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.ejercicio}</td><td>${row.iteracion}</td>
+          <td>${formatearCeldaGaussSeidel(row.x1, 2)}</td><td>${formatearCeldaGaussSeidel(row.x2, 3)}</td><td>${formatearCeldaGaussSeidel(row.x3, 4)}</td><td>${formatearCeldaGaussSeidel(row.ea, 5)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(() => mostrarNotificacion("No se pudo buscar el ejercicio.", "error"));
+}
+
+async function eliminarEjercicioGaussSeidel(event) {
+  event.preventDefault();
+  const ejercicio = document.getElementById("ej-gs")?.value;
+  if (!ejercicio) return mostrarNotificacion("Ingrese el número de ejercicio a eliminar.", "warning");
+  const ok = await confirmarAccion("Eliminar ejercicio", `¿Eliminar todos los registros del ejercicio #${ejercicio}?`);
+  if (!ok) return;
+  fetch(`/eliminar-gauss-seidel/${ejercicio}`, { method: "DELETE" })
+    .then(leerRespuestaServidor)
+    .then(({ ok, payload }) => {
+      if (!ok) throw new Error(payload?.error || "No se pudo eliminar.");
+      mostrarNotificacion(payload?.mensaje || "Eliminado.", "success");
+      cargarResultadosGaussSeidel();
+    })
+    .catch(err => mostrarNotificacion(err.message || "No se pudo eliminar.", "error"));
+}
+
+function actualizarEjercicioGaussSeidel(event) {
+  event.preventDefault();
+  const form = document.getElementById("form-gauss-seidel");
+  const formData = new FormData(form);
+  fetch("/actualizar-gauss-seidel", { method: "POST", body: formData })
+    .then(leerRespuestaServidor)
+    .then(({ ok, payload }) => {
+      if (!ok) throw new Error(payload?.error || "No se pudo actualizar.");
+      mostrarNotificacion(mensajeUsuarioActualizacion(payload), "success");
+      cargarResultadosGaussSeidel();
+    })
+    .catch(err => mostrarNotificacion(err.message || "No se pudo actualizar.", "error"));
 }
 
 // -------- Secante
@@ -1431,27 +1923,39 @@ function exportarTabla(idTabla, nombreArchivo, nombreHoja) {
 
 async function exportarTodo() {
   try {
-    const [resBiseccion, resFalsa, resPuntoFijo, resNewtonCla, resNewtonMod, resNewtonNum, resHorner] = await Promise.all([
+    const [resBiseccion, resFalsa, resPuntoFijo, resNewtonCla, resNewtonMod, resNewtonNum, resNewtonSistemas, resJacobi, resGaussSeidel, resSecante, resMuller, resBairstow, resHorner] = await Promise.all([
       fetch('/resultados-biseccion'),
       fetch('/resultados-falsa-posicion'),
       fetch('/resultados-punto-fijo'),
       fetch('/resultados-newton/CLA'),
       fetch('/resultados-newton/MOD'),
       fetch('/resultados-newton/NUM'),
+      fetch('/resultados-newton-sistemas'),
+      fetch('/resultados-jacobi'),
+      fetch('/resultados-gauss-seidel'),
+      fetch('/resultados-secante'),
+      fetch('/resultados-muller'),
+      fetch('/resultados-bairstow'),
       fetch('/resultados-horner')
     ]);
 
-    if (!resBiseccion.ok || !resFalsa.ok || !resPuntoFijo.ok || !resNewtonCla.ok || !resNewtonMod.ok || !resNewtonNum.ok || !resHorner.ok) {
+    if (!resBiseccion.ok || !resFalsa.ok || !resPuntoFijo.ok || !resNewtonCla.ok || !resNewtonMod.ok || !resNewtonNum.ok || !resNewtonSistemas.ok || !resJacobi.ok || !resGaussSeidel.ok || !resSecante.ok || !resMuller.ok || !resBairstow.ok || !resHorner.ok) {
       throw new Error('No se pudieron leer los datos almacenados.');
     }
 
-    const [dataBiseccion, dataFalsa, dataPuntoFijo, dataNewtonCla, dataNewtonMod, dataNewtonNum, dataHorner] = await Promise.all([
+    const [dataBiseccion, dataFalsa, dataPuntoFijo, dataNewtonCla, dataNewtonMod, dataNewtonNum, dataNewtonSistemas, dataJacobi, dataGaussSeidel, dataSecante, dataMuller, dataBairstow, dataHorner] = await Promise.all([
       resBiseccion.json(),
       resFalsa.json(),
       resPuntoFijo.json(),
       resNewtonCla.json(),
       resNewtonMod.json(),
       resNewtonNum.json(),
+      resNewtonSistemas.json(),
+      resJacobi.json(),
+      resGaussSeidel.json(),
+      resSecante.json(),
+      resMuller.json(),
+      resBairstow.json(),
       resHorner.json()
     ]);
 
@@ -1463,6 +1967,12 @@ async function exportarTodo() {
       { id: 'tabla-resultados-newton', nombre: 'Newton_CLA', filas: dataNewtonCla },
       { id: 'tabla-resultados-newton', nombre: 'Newton_MOD', filas: dataNewtonMod },
       { id: 'tabla-resultados-newton', nombre: 'Newton_NUM', filas: dataNewtonNum },
+      { id: 'tabla-resultados-newton-sistemas', nombre: 'Newton_Sistemas', filas: dataNewtonSistemas },
+      { id: 'tabla-resultados-jacobi', nombre: 'Jacobi', filas: dataJacobi },
+      { id: 'tabla-resultados-gauss-seidel', nombre: 'Gauss_Seidel', filas: dataGaussSeidel },
+      { id: 'tabla-resultados-secante', nombre: 'Secante', filas: dataSecante },
+      { id: 'tabla-resultados-muller', nombre: 'Muller', filas: dataMuller },
+      { id: 'tabla-resultados-bairstow', nombre: 'Bairstow', filas: dataBairstow },
       { id: 'tabla-resultados-horner', nombre: 'Horner', filas: dataHorner }
     ];
 
@@ -1470,7 +1980,8 @@ async function exportarTodo() {
       const ths = document.querySelectorAll(`#${id} thead th`);
       const headers = Array.from(ths).map(th => th.innerText.trim());
       const rows = Array.isArray(filas) ? filas : [];
-      const matriz = [headers, ...rows];
+      const rowsArray = rows.map(fila => Array.isArray(fila) ? fila : Object.values(fila));
+      const matriz = [headers, ...rowsArray];
       const ws = XLSX.utils.aoa_to_sheet(matriz);
       XLSX.utils.book_append_sheet(wb, ws, nombre);
     });
@@ -1483,7 +1994,7 @@ async function exportarTodo() {
 
 // ==================== HORNER ====================
 function cargarResultadosHorner() {
-  fetch('http://127.0.0.1:5000/resultados-horner')
+  fetch('/resultados-horner')
     .then(r => r.json())
     .then(data => {
       const tbody = document.querySelector("#tabla-resultados-horner tbody");
@@ -1492,8 +2003,18 @@ function cargarResultadosHorner() {
       const filas = Array.isArray(data) ? data : [];
       filas.forEach(fila => {
         const tr = tbody.insertRow();
-        const celdas = Array.isArray(fila) ? fila : Object.values(fila);
-        celdas.forEach(valor => {
+        const valores = Array.isArray(fila)
+          ? fila
+          : [
+              fila.ejercicio ?? fila['ejercicio'] ?? fila[0] ?? '',
+              fila.iteracion ?? fila['iteracion'] ?? fila[1] ?? '',
+              fila.xi ?? fila['xi'] ?? fila[2] ?? '',
+              fila.fxi ?? fila['fxi'] ?? fila[3] ?? '',
+              fila.dfxi ?? fila['dfxi'] ?? fila[4] ?? fila['fprima'] ?? '',
+              fila.xi_nuevo ?? fila['xi_nuevo'] ?? fila[5] ?? fila['xi+1'] ?? '',
+              fila.ea ?? fila['ea'] ?? fila[6] ?? ''
+            ];
+        valores.forEach(valor => {
           const td = tr.insertCell();
           td.textContent = valor;
         });
@@ -1505,7 +2026,10 @@ function cargarResultadosHorner() {
 
 function actualizarSelectHorner(data) {
   const filas = Array.isArray(data) ? data : [];
-  const ejercicios = [...new Set(filas.map(r => r[0]))];
+  const ejercicios = [...new Set(filas.map(r => {
+    if (Array.isArray(r)) return r[0];
+    return r && (r.ejercicio ?? r['ejercicio'] ?? r[0] ?? null);
+  }).filter(Boolean))];
   const select = document.getElementById('ejercicioSelectHorner');
   if (!select) return;
   select.innerHTML = '';
@@ -1518,6 +2042,9 @@ function actualizarSelectHorner(data) {
   if (ejercicios.length) {
     select.value = ejercicios[ejercicios.length - 1];
     cargarGraficaHorner();
+  } else {
+    const frame = document.getElementById('grafica-interactiva-horner');
+    if (frame) frame.removeAttribute('src');
   }
 }
 
@@ -1526,21 +2053,32 @@ function cargarGraficaHorner() {
   const frame = document.getElementById('grafica-interactiva-horner');
   if (!select || !frame) return;
   const ej = select.value;
-  if (!ej) return;
+  if (!ej) {
+    frame.removeAttribute('src');
+    return;
+  }
   frame.src = `/static/imagenes/horner_${ej}.html?t=${Date.now()}`;
 }
 
-function eliminarEjercicioHorner(e) {
-  e.preventDefault();
-  const ej = document.getElementById('ejercicio-horner').value;
-  if (!ej) return mostrarNotificacion("Ingresa número de ejercicio", "warning");
-  fetch(`http://127.0.0.1:5000/eliminar-horner/${ej}`, { method: 'DELETE' })
-    .then(r => r.text())
-    .then(msg => {
-      mostrarNotificacion(msg, "success");
+async function eliminarEjercicioHorner(event) {
+  event.preventDefault();
+  const ejercicio = document.getElementById("ejercicio-horner")?.value;
+  
+  if (!ejercicio) {
+    return mostrarNotificacion("Ingrese el número de ejercicio que desea eliminar.", "warning");
+  }
+
+  const ok = await confirmarAccion("Confirmar eliminación", `Se eliminarán los registros del ejercicio #${ejercicio}.`);
+  if (!ok) return;
+
+  fetch(`/eliminar-horner/${ejercicio}`, { method: "DELETE" })
+    .then(leerRespuestaServidor)
+    .then(({ ok, payload }) => {
+      if (!ok) throw new Error(payload?.error || "No se pudo eliminar.");
+      mostrarNotificacion(payload?.mensaje || "Eliminado.", "success");
       cargarResultadosHorner();
     })
-    .catch(() => mostrarNotificacion("No se pudo eliminar.", "error"));
+    .catch(err => mostrarNotificacion(err.message || "No se pudo eliminar.", "error"));
 }
 
 function actualizarEjercicioHorner(e) {
@@ -1548,7 +2086,7 @@ function actualizarEjercicioHorner(e) {
   const form = document.getElementById('form-horner');
   if (!form) return mostrarNotificacion('No se encontró el formulario de Horner.', 'warning');
   const formData = new FormData(form);
-  fetch('http://127.0.0.1:5000/actualizar-horner', {
+  fetch('/actualizar-horner', {
     method: 'POST',
     body: formData
   })
@@ -1565,7 +2103,7 @@ if (formHorner) {
   formHorner.addEventListener("submit", function (e) {
     e.preventDefault();
     const formData = new FormData(this);
-    fetch("http://127.0.0.1:5000/horner", {
+    fetch("/horner", {
       method: "POST",
       body: formData
     })
@@ -1655,37 +2193,58 @@ window.addEventListener('load', () => {
 
   // Inicialización métodos nuevos
   if (document.getElementById("form-newton-sistemas")) cargarResultadosNewtonSistemas();
+  registrarFormularioJacobi();
+  registrarFormularioGaussSeidel();
+  if (document.getElementById("form-jacobi")) cargarResultadosJacobi();
+  if (document.getElementById("form-gauss-seidel")) cargarResultadosGaussSeidel();
   if (document.getElementById("form-secante")) cargarResultadosSecante();
   if (document.getElementById("form-muller")) cargarResultadosMuller();
   if (document.getElementById("form-bairstow")) cargarResultadosBairstow();
   if (document.getElementById("form-horner")) cargarResultadosHorner();
-  let currentSlide = 0;
 
-  window.abrirGuia = function() {
-    const modal = document.getElementById('modal-guia');
-    if (modal) modal.style.display = 'flex';
+  initCarouselGuia();
+  initMobileNav();
+  initScrollSpy();
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") cerrarGuia();
+  });
+
+  const modalGuia = document.getElementById("modal-guia");
+  if (modalGuia) {
+    modalGuia.addEventListener("click", (event) => {
+      if (event.target === modalGuia) cerrarGuia();
+    });
   }
 
-  window.cerrarGuia = function() {
-    const modal = document.getElementById('modal-guia');
-    if (modal) modal.style.display = 'none';
-  }
+  document.querySelectorAll(".submenu a[href^='#'], .menu-home-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      link.style.animation = "none";
+      void link.offsetWidth;
+      link.classList.add("nav-link-pulse");
+      setTimeout(() => link.classList.remove("nav-link-pulse"), 500);
+    });
+  });
 
-  window.moverCarrusel = function(direccion) {
-    const track = document.querySelector('.carousel-track');
-    const slides = document.querySelectorAll('.carousel-slide');
-    const totalSlides = slides.length;
+  const revealTargets = document.querySelectorAll(
+    "section, .form-row, .tabla-contenedor, .grafica-container"
+  );
+  revealTargets.forEach((el) => el.classList.add("reveal-on-scroll"));
 
-    currentSlide = (currentSlide + direccion + totalSlides) % totalSlides;
-    const offset = currentSlide * -100;
-    if (track) track.style.transform = `translateX(${offset}%)`;
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -40px 0px" }
+    );
+    revealTargets.forEach((el) => observer.observe(el));
+  } else {
+    revealTargets.forEach((el) => el.classList.add("revealed"));
   }
-
-// Cerrar modal al hacer clic fuera del contenido
-window.onclick = function(event) {
-  const modal = document.getElementById('modal-guia');
-  if (event.target == modal) {
-    cerrarGuia();
-  }
-}
 });

@@ -1,7 +1,7 @@
 ﻿from flask import Blueprint, request, jsonify
 import math
 import re
-import mysql.connector
+from database import get_connection
 import plotly.graph_objs as go
 import plotly.io as pio
 import numpy as np
@@ -44,24 +44,18 @@ def polinomio_a_coeficientes(expr):
     """
     try:
         expr_normalizada = _aplicar_reemplazos(expr)
-        
-        # Intentar con sympy primero (más robusto)
+
         try:
             from sympy import symbols, Poly, sympify, expand
             x = symbols('x')
-            
-            # Expandir y crear polinomio
             poly_expr = expand(sympify(expr_normalizada))
             poly = Poly(poly_expr, x)
             coeficientes = poly.all_coeffs()
-            
             return [float(c) for c in coeficientes]
-        
-        except (ImportError, SyntaxError, Exception) as e:
-            # Fallback si sympy falla: método manual
-            print(f"Sympy falló, usando método manual. Error: {str(e)}")
+        except Exception as e:
+            print(f"Sympy no disponible o parseo falló, usando método manual. Error: {str(e)}")
             return polinomio_a_coeficientes_manual(expr_normalizada)
-    
+
     except Exception as e:
         raise ValueError(f"Error al parsear polinomio: {str(e)}")
 
@@ -72,18 +66,20 @@ def polinomio_a_coeficientes_manual(expr):
     Evalúa el polinomio en varios puntos y resuelve un sistema de ecuaciones.
     """
     try:
-        # Compilar la expresión
-        code = compile(expr, '<expr>', 'eval')
-        
-        # Evaluar en varios puntos para determinar el grado
-        grado = 0
-        for test_x in [0, 1, -1, 2, -2]:
-            try:
-                val = eval(code, {"__builtins__": {}}, {"x": test_x, "sqrt": math.sqrt, "sin": math.sin, "log": math.log, "exp": math.exp})
-                if val != 0:
-                    grado += 1
-            except:
-                pass
+        expr = expr.replace('**', '^')
+        expr = expr.replace('*', '')
+        expr = expr.replace(' ', '')
+
+        if expr == '':
+            raise ValueError('Expresión vacía')
+
+        expr = expr.replace('-', '+-')
+        expr = expr.replace('++', '+')
+        if expr.startswith('+-'):
+            expr = expr[1:]
+
+        terminos = [t for t in expr.split('+') if t != '']
+        coeficientes = {}
         
         if grado == 0:
             grado = 1
@@ -204,12 +200,7 @@ def ejecutar_horner():
             return jsonify({"error": "No se pudo calcular ninguna iteración"}), 400
 
         # Guardar en BD
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="metodos_numericos"
-        )
+        conn = get_connection()
         cursor = conn.cursor()
         
         cursor.execute("DELETE FROM metodo_horner WHERE ejercicio = %s", (ejercicio,))
@@ -301,12 +292,7 @@ def ejecutar_horner():
 @horner_bp.route('/resultados-horner')
 def ver_resultados_horner():
     try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="metodos_numericos"
-        )
+        conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT 
@@ -332,12 +318,7 @@ def ver_resultados_horner():
 def buscar_ejercicio_horner(ejercicio):
     """Obtener resultados de un ejercicio específico"""
     try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="metodos_numericos"
-        )
+        conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT 
@@ -367,12 +348,7 @@ def buscar_ejercicio_horner(ejercicio):
 @horner_bp.route('/eliminar-horner/<int:ejercicio>', methods=['DELETE'])
 def eliminar_horner(ejercicio):
     try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="metodos_numericos"
-        )
+        conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM metodo_horner WHERE ejercicio = %s", (ejercicio,))
         conn.commit()
@@ -393,12 +369,7 @@ def actualizar_horner():
         except (ValueError, TypeError):
             return jsonify({"error": "Ejercicio debe ser un número entero válido"}), 400
         
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="metodos_numericos"
-        )
+        conn = get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM metodo_horner WHERE ejercicio = %s", (ejercicio,))
         existe = cursor.fetchone()[0] > 0

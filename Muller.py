@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import math
 import re
 import os
-import mysql.connector
+from database import get_connection
 import plotly.graph_objs as go
 import plotly.io as pio
 import numpy as np
@@ -13,12 +13,7 @@ MAX_ITER = 100
 
 
 def _db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="metodos_numericos",
-    )
+    return get_connection()
 
 
 def _asegurar_tabla():
