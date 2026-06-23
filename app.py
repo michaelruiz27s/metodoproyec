@@ -11,6 +11,8 @@ from Bairstow import bairstow_bp
 from Horner import horner_bp
 from Jacobi import jacobi_bp
 from Gauss_Seidel import gauss_seidel_bp
+from Romberg import romberg_bp
+from Euler import euler_bp
 
 from database import init_database
 
@@ -52,6 +54,8 @@ app.register_blueprint(bairstow_bp)
 app.register_blueprint(horner_bp)
 app.register_blueprint(jacobi_bp)
 app.register_blueprint(gauss_seidel_bp)   
+app.register_blueprint(romberg_bp)
+app.register_blueprint(euler_bp)
 
 
 

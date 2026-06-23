@@ -2248,3 +2248,233 @@ window.addEventListener('load', () => {
     revealTargets.forEach((el) => el.classList.add("revealed"));
   }
 });
+// ══════════════════════════════════════════════════════════════
+// RESULTADOS FINALES — pegar al final de Funciones.js
+// ══════════════════════════════════════════════════════════════
+
+// ── Utilidad central ─────────────────────────────────────────
+function mostrarResultadoFinal(boxId, valorId, valor, decimales = 10) {
+  const box = document.getElementById(boxId);
+  const val = document.getElementById(valorId);
+  if (!box || !val) return;
+  const num = Number(valor);
+  val.textContent = isNaN(num) ? valor : `x ≈ ${parseFloat(num.toFixed(decimales))}`;
+  box.style.display = 'block';
+}
+
+function ocultarResultadoFinal(boxId) {
+  const box = document.getElementById(boxId);
+  if (box) box.style.display = 'none';
+}
+
+function mostrarResultadoMulti(boxId, items) {
+  // items = [{ labelId, valor, decimales }]
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  items.forEach(({ valorId, valor, decimales = 8 }) => {
+    const el = document.getElementById(valorId);
+    if (!el) return;
+    const num = Number(valor);
+    el.textContent = isNaN(num) ? valor : parseFloat(num.toFixed(decimales));
+  });
+  box.style.display = 'block';
+}
+
+// ── Extrae última fila de una tabla por su id ─────────────────
+function ultimaFilaTabla(tablaId) {
+  const tbody = document.querySelector(`#${tablaId} tbody`);
+  if (!tbody) return null;
+  const filas = tbody.querySelectorAll('tr');
+  if (!filas.length) return null;
+  return Array.from(filas[filas.length - 1].querySelectorAll('td')).map(td => td.textContent.trim());
+}
+
+// ══════════════════════════════════════════════════════════════
+// Conectar con cada método: reemplaza las funciones de carga
+// existentes para que llamen a mostrarResultadoFinal después.
+// Lo más limpio: usar un hook post-carga.
+// ══════════════════════════════════════════════════════════════
+
+// ── HOOK genérico post-fetch ──────────────────────────────────
+function actualizarResultadoDesdeTabla(tablaId, extractor) {
+  // Espera un tick para que el DOM de la tabla ya esté actualizado
+  setTimeout(() => {
+    const fila = ultimaFilaTabla(tablaId);
+    if (fila) extractor(fila);
+  }, 120);
+}
+
+// ── BISECCIÓN ─────────────────────────────────────────────────
+// Columnas: [0]ejercicio [1]iter [2]xa [3]xb [4]fxa [5]fxb [6]xr [7]fxr [8]ea
+// Después de cargarResultados() y buscarPorEjercicio():
+const _cargarResultadosOrig = typeof cargarResultados === 'function' ? cargarResultados : null;
+function cargarResultados() {
+  if (_cargarResultadosOrig) _cargarResultadosOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados', fila => {
+    const box = document.getElementById('resultado-biseccion');
+    const val = document.getElementById('val-biseccion');
+    if (!box || !val) return;
+    val.textContent = `Xr ≈ ${parseFloat(Number(fila[6]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── FALSA POSICIÓN ────────────────────────────────────────────
+const _cargarResultadosFalsaOrig = typeof cargarResultadosFalsa === 'function' ? cargarResultadosFalsa : null;
+function cargarResultadosFalsa() {
+  if (_cargarResultadosFalsaOrig) _cargarResultadosFalsaOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-falsa', fila => {
+    const box = document.getElementById('resultado-falsa');
+    const val = document.getElementById('val-falsa');
+    if (!box || !val) return;
+    val.textContent = `Xr ≈ ${parseFloat(Number(fila[6]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── PUNTO FIJO ────────────────────────────────────────────────
+const _cargarResultadosPFOrig = typeof cargarResultadosPuntoFijo === 'function' ? cargarResultadosPuntoFijo : null;
+function cargarResultadosPuntoFijo() {
+  if (_cargarResultadosPFOrig) _cargarResultadosPFOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-puntofijo', fila => {
+    const box = document.getElementById('resultado-puntofijo');
+    const val = document.getElementById('val-puntofijo');
+    if (!box || !val) return;
+    // Columnas: [0]ejercicio [1]iter [2]xi [3]gxi [4]ea
+    val.textContent = `x ≈ ${parseFloat(Number(fila[3]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── NEWTON-RAPHSON ────────────────────────────────────────────
+const _cargarResultadosNewtonOrig = typeof cargarResultadosNewton === 'function' ? cargarResultadosNewton : null;
+function cargarResultadosNewton() {
+  if (_cargarResultadosNewtonOrig) _cargarResultadosNewtonOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-newton', fila => {
+    const box = document.getElementById('resultado-newton');
+    const val = document.getElementById('val-newton');
+    if (!box || !val) return;
+    // Columnas: [0]ejercicio [1]iter [2]xi [3]fxi [4]dfxi [5]xi+1 [6]ea
+    val.textContent = `x ≈ ${parseFloat(Number(fila[5]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── SECANTE ───────────────────────────────────────────────────
+const _cargarResultadosSecanteOrig = typeof cargarResultadosSecante === 'function' ? cargarResultadosSecante : null;
+function cargarResultadosSecante() {
+  if (_cargarResultadosSecanteOrig) _cargarResultadosSecanteOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-secante', fila => {
+    const box = document.getElementById('resultado-secante');
+    const val = document.getElementById('val-secante');
+    if (!box || !val) return;
+    // Columnas: [0]ejercicio [1]iter [2]xi-1 [3]xi [4]fxi-1 [5]fxi [6]xi+1 [7]ea
+    val.textContent = `x ≈ ${parseFloat(Number(fila[6]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── MÜLLER ────────────────────────────────────────────────────
+const _cargarResultadosMullerOrig = typeof cargarResultadosMuller === 'function' ? cargarResultadosMuller : null;
+function cargarResultadosMuller() {
+  if (_cargarResultadosMullerOrig) _cargarResultadosMullerOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-muller', fila => {
+    const box = document.getElementById('resultado-muller');
+    const val = document.getElementById('val-muller');
+    if (!box || !val) return;
+    // Columnas: [0]ejercicio [1]iter [2]x0 [3]x1 [4]x2 [5]x3 [6]fx3 [7]ea
+    val.textContent = `x ≈ ${parseFloat(Number(fila[5]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── BAIRSTOW ──────────────────────────────────────────────────
+const _cargarResultadosBairstowOrig = typeof cargarResultadosBairstow === 'function' ? cargarResultadosBairstow : null;
+function cargarResultadosBairstow() {
+  if (_cargarResultadosBairstowOrig) _cargarResultadosBairstowOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-bairstow', fila => {
+    // Columnas: [0]ejercicio [1]iter [2]r [3]s [4]dr [5]ds [6]ea
+    mostrarResultadoMulti('resultado-bairstow', [
+      { valorId: 'val-bairstow-r', valor: fila[2], decimales: 8 },
+      { valorId: 'val-bairstow-s', valor: fila[3], decimales: 8 },
+    ]);
+  });
+}
+
+// ── HORNER ────────────────────────────────────────────────────
+const _cargarResultadosHornerOrig = typeof cargarResultadosHorner === 'function' ? cargarResultadosHorner : null;
+function cargarResultadosHorner() {
+  if (_cargarResultadosHornerOrig) _cargarResultadosHornerOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-horner', fila => {
+    const box = document.getElementById('resultado-horner');
+    const val = document.getElementById('val-horner');
+    if (!box || !val) return;
+    // Columnas: [0]ejercicio [1]iter [2]xi [3]fxi [4]dfxi [5]xi_nuevo [6]ea
+    val.textContent = `x ≈ ${parseFloat(Number(fila[5]).toFixed(10))}`;
+    box.style.display = 'block';
+  });
+}
+
+// ── NEWTON SISTEMAS ───────────────────────────────────────────
+const _cargarResultadosNSOrig = typeof cargarResultadosNewtonSistemas === 'function' ? cargarResultadosNewtonSistemas : null;
+function cargarResultadosNewtonSistemas() {
+  if (_cargarResultadosNSOrig) _cargarResultadosNSOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-newton-sistemas', fila => {
+    // Columnas: [0]ejercicio [1]iter [2]x [3]y [4]z [5]fx [6]fy [7]fz [8]dx [9]dy [10]dz
+    mostrarResultadoMulti('resultado-newton-sistemas', [
+      { valorId: 'val-ns-x', valor: fila[2], decimales: 8 },
+      { valorId: 'val-ns-y', valor: fila[3], decimales: 8 },
+      { valorId: 'val-ns-z', valor: fila[4], decimales: 8 },
+    ]);
+  });
+}
+
+// ── JACOBI ────────────────────────────────────────────────────
+const _cargarResultadosJacobiOrig = typeof cargarResultadosJacobi === 'function' ? cargarResultadosJacobi : null;
+function cargarResultadosJacobi() {
+  if (_cargarResultadosJacobiOrig) _cargarResultadosJacobiOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-jacobi', fila => {
+    // Columnas: [0]ejercicio [1]iter [2]x1 [3]x2 [4]x3 [5]ea
+    mostrarResultadoMulti('resultado-jacobi', [
+      { valorId: 'val-jac-x1', valor: fila[2], decimales: 8 },
+      { valorId: 'val-jac-x2', valor: fila[3], decimales: 8 },
+      { valorId: 'val-jac-x3', valor: fila[4], decimales: 8 },
+    ]);
+  });
+}
+
+// ── GAUSS-SEIDEL ──────────────────────────────────────────────
+const _cargarResultadosGSOrig = typeof cargarResultadosGaussSeidel === 'function' ? cargarResultadosGaussSeidel : null;
+function cargarResultadosGaussSeidel() {
+  if (_cargarResultadosGSOrig) _cargarResultadosGSOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-gauss-seidel', fila => {
+    // Columnas: [0]ejercicio [1]iter [2]x1 [3]x2 [4]x3 [5]ea
+    mostrarResultadoMulti('resultado-gauss-seidel', [
+      { valorId: 'val-gs-x1', valor: fila[2], decimales: 8 },
+      { valorId: 'val-gs-x2', valor: fila[3], decimales: 8 },
+      { valorId: 'val-gs-x3', valor: fila[4], decimales: 8 },
+    ]);
+  });
+}
+
+// ── EULER ─────────────────────────────────────────────────────
+const _cargarResultadosEulerOrig = typeof cargarResultadosEuler === 'function' ? cargarResultadosEuler : null;
+function cargarResultadosEuler() {
+  if (_cargarResultadosEulerOrig) _cargarResultadosEulerOrig();
+  actualizarResultadoDesdeTabla('tabla-resultados-euler', fila => {
+    // Columnas: [0]ejercicio [1]iter [2]x [3]y [4]fxy [5]y_nuevo [6]ea
+    mostrarResultadoMulti('resultado-euler', [
+      { valorId: 'val-euler-x', valor: fila[2], decimales: 8 },
+      { valorId: 'val-euler-y', valor: fila[5], decimales: 8 },
+    ]);
+  });
+}
+
+// ── Ocultar cajas al eliminar ─────────────────────────────────
+// Llama ocultarResultadoFinal('resultado-biseccion') etc.
+// después de cada eliminar exitoso, por ejemplo:
+//
+//   .then(() => { ocultarResultadoFinal('resultado-biseccion'); cargarResultados(); })
+//
+// Ya está cubierto porque cargarResultados() se llama después del delete
+// y si la tabla queda vacía, ultimaFilaTabla() devuelve null y no muestra la caja.

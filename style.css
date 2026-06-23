@@ -1720,3 +1720,264 @@ body.nav-open {
   background: #991b1b;
 }
 
+
+
+/* ── Tabla Euler ──────────────────────────────────────────── */
+#tabla-resultados-euler {
+  min-width: 820px;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  width: 100%;
+}
+
+#tabla-resultados-euler th {
+  background: var(--bg-2);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+#tabla-resultados-euler td {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  text-align: center;
+  color: var(--text);
+  transition: background 0.15s;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#tabla-resultados-euler tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+
+#tabla-resultados-euler tr:hover td {
+  background: rgba(245,158,11,0.06);
+  color: var(--accent);
+}
+
+#tabla-resultados-euler tbody tr {
+  animation: fadeInUp 0.35s ease-out both;
+}
+
+/* ── Tabla Romberg ────────────────────────────────────────── */
+#tabla-resultados-romberg {
+  min-width: 700px;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  width: 100%;
+}
+
+#tabla-resultados-romberg th {
+  background: var(--bg-2);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 24px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+#tabla-resultados-romberg td {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  text-align: center;
+  color: var(--text);
+  transition: background 0.15s;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#tabla-resultados-romberg tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+
+#tabla-resultados-romberg tr:hover td {
+  background: rgba(245,158,11,0.06);
+  color: var(--accent);
+}
+
+#tabla-resultados-romberg tbody tr {
+  animation: fadeInUp 0.35s ease-out both;
+}
+
+/* Columna Nivel resaltada en Romberg */
+#tabla-resultados-romberg td:nth-child(2) {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+/* Columna Columna (j) en Romberg */
+#tabla-resultados-romberg td:nth-child(3) {
+  color: var(--accent-3);
+  font-weight: 600;
+}
+
+/* Columna Valor en Romberg — más ancha para decimales largos */
+#tabla-resultados-romberg td:nth-child(4),
+#tabla-resultados-romberg th:nth-child(4) {
+  min-width: 180px;
+}
+
+/* Columna Ea en Romberg */
+#tabla-resultados-romberg td:nth-child(5) {
+  color: var(--success);
+}
+
+/* ── Scrollbar para tablas nuevas ──────────────────────────── */
+.tabla-scroll:has(#tabla-resultados-euler),
+.tabla-scroll:has(#tabla-resultados-romberg) {
+  overflow-x: auto;
+}
+
+/* ── Caja resultado destacado Romberg ───────────────────────── */
+#romberg-resultado-box {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+#romberg-resultado-box > div {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 32px;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 24px rgba(245,158,11,0.12);
+}
+
+/* ── Euler / Romberg en menú lateral ───────────────────────── */
+.euler-scroll-section,
+.romberg-scroll-section {
+  height: auto;
+  min-height: unset;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  scroll-margin-top: 20px;
+  margin-bottom: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.euler-scroll-section:hover,
+.romberg-scroll-section:hover {
+  border-color: rgba(56, 189, 248, 0.18);
+  box-shadow: var(--shadow-soft), 0 0 0 1px rgba(56, 189, 248, 0.06);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  #tabla-resultados-euler,
+  #tabla-resultados-romberg {
+    min-width: 600px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CAJA RESULTADO FINAL — pegar al final de style.css
+   ══════════════════════════════════════════════════════════════ */
+
+.resultado-final-box {
+  display: none;
+  margin: 20px 0 4px;
+  text-align: center;
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.resultado-final-inner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 36px;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.14);
+  min-width: 260px;
+}
+
+.resultado-final-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.resultado-final-valor {
+  color: var(--accent);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Variante multi-valor (Jacobi, Gauss-Seidel, Newton Sistemas, Bairstow) */
+.resultado-final-multi {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 36px;
+  font-family: var(--font-mono);
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.14);
+  min-width: 300px;
+}
+
+.resultado-final-multi .resultado-final-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.resultado-final-multi .resultado-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.resultado-final-multi .resultado-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.resultado-final-multi .resultado-item-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.resultado-final-multi .resultado-item-valor {
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+}

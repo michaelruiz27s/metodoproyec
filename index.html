@@ -6,6 +6,134 @@
   <link rel="icon" href="https://images.vexels.com/media/users/3/135555/isolated/preview/b45edb6f6eee6d71bcc54eb911e54f3b-icono-de-numeros-de-calculadora.png" type="image/png">
   <title>Métodos Numéricos</title>
   <link rel="stylesheet" href="style.css?v=4">
+  <style>
+    /* ── Caja resultado final ── */
+    .resultado-final-box {
+      display: none;
+      margin: 20px 0 4px;
+      text-align: center;
+      animation: fadeInUp 0.4s ease-out both;
+    }
+    .resultado-final-inner {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 36px;
+      font-family: var(--font-mono);
+      box-shadow: 0 0 28px rgba(245,158,11,0.14);
+      min-width: 260px;
+    }
+    .resultado-final-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+    }
+    .resultado-final-valor {
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .resultado-final-multi {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 36px;
+      font-family: var(--font-mono);
+      box-shadow: 0 0 28px rgba(245,158,11,0.14);
+      min-width: 300px;
+    }
+    .resultado-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .resultado-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .resultado-item-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+    .resultado-item-valor {
+      color: var(--accent);
+      font-size: 18px;
+      font-weight: 700;
+    }
+    /* ── Tablas Euler y Romberg ── */
+    #tabla-resultados-euler,
+    #tabla-resultados-romberg {
+      min-width: 700px;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      width: 100%;
+    }
+    #tabla-resultados-euler th,
+    #tabla-resultados-romberg th {
+      background: var(--bg-2);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 14px 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      white-space: nowrap;
+    }
+    #tabla-resultados-euler td,
+    #tabla-resultados-romberg td {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      text-align: center;
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    #tabla-resultados-euler tr:nth-child(even) td,
+    #tabla-resultados-romberg tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    #tabla-resultados-euler tr:hover td,
+    #tabla-resultados-romberg tr:hover td { background: rgba(245,158,11,0.06); color: var(--accent); }
+    #tabla-resultados-romberg td:nth-child(2) { color: var(--accent-2); font-weight: 600; }
+    #tabla-resultados-romberg td:nth-child(3) { color: var(--accent-3); font-weight: 600; }
+    #tabla-resultados-romberg td:nth-child(4),
+    #tabla-resultados-romberg th:nth-child(4) { min-width: 180px; }
+    #tabla-resultados-romberg td:nth-child(5) { color: var(--success); }
+    .euler-scroll-section,
+    .romberg-scroll-section {
+      height: auto; min-height: unset; background: transparent;
+      display: flex; flex-direction: column; overflow: hidden;
+      scroll-margin-top: 20px; margin-bottom: 2.5rem;
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .euler-scroll-section:hover,
+    .romberg-scroll-section:hover {
+      border-color: rgba(56,189,248,0.18);
+      box-shadow: var(--shadow-soft), 0 0 0 1px rgba(56,189,248,0.06);
+    }
+  </style>
 </head>
 <body>
   <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
@@ -53,6 +181,8 @@
           <a href="#muller">Müller</a>
           <a href="#bairstow">Bairstow</a>
           <a href="#horner-section">Horner</a>
+          <a href="#euler">Euler (Simple / Modificado)</a>
+          <a href="#romberg">Romberg</a>
         </div>
       </div>
     </nav>
@@ -77,72 +207,106 @@
     <button type="button" class="btn-mobile-info" onclick="abrirGuia()" aria-label="Info de métodos">💡</button>
   </header>
 
+  <!-- ══ MODAL GUÍA ══ -->
   <div id="modal-guia" class="modal-overlay modal-guia-overlay" aria-hidden="true">
     <div class="modal-aprendizaje">
       <button type="button" class="btn-cerrar-modal" onclick="cerrarGuia()" aria-label="Cerrar">×</button>
       <div class="carousel-header">
         <span class="carousel-badge">Guía de métodos</span>
-        <span id="carousel-contador" class="carousel-contador">1 / 11</span>
+        <span id="carousel-contador" class="carousel-contador">1 / 14</span>
       </div>
       <div class="carousel-container">
         <div class="carousel-track">
+
           <div class="carousel-slide">
             <h3>Método de Bisección</h3>
             <p>Método cerrado que divide el intervalo a la mitad. Garantiza convergencia si la función es continua y hay cambio de signo.</p>
             <div class="formula-box">\[x_r = \frac{x_a + x_b}{2}\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Falsa Posición</h3>
             <p>Mejora la bisección uniendo los puntos extremos con una línea recta para aproximar la raíz por interpolación lineal.</p>
             <div class="formula-box">\[x_r = x_b - \frac{f(x_b)(x_a - x_b)}{f(x_a) - f(x_b)}\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Punto Fijo</h3>
-            <p>Transforma \(f(x)=0\) en \(x=g(x)\). El método converge si \(|g'(x)| < 1\) en el entorno de la raíz.</p>
+            <p>Transforma \(f(x)=0\) en \(x=g(x)\). El método converge si \(|g'(x)| &lt; 1\) en el entorno de la raíz.</p>
             <div class="formula-box">\[x_{i+1} = g(x_i)\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Newton-Raphson</h3>
             <p>Utiliza la tangente de la función. Es el método más eficiente (convergencia cuadrática) pero requiere conocer la derivada.</p>
             <div class="formula-box">\[x_{i+1} = x_i - \frac{f(x_i)}{f'(x_i)}\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Método de la Secante</h3>
             <p>Similar a Newton, pero sustituye la derivada por una aproximación basada en dos puntos anteriores.</p>
             <div class="formula-box">\[x_{i+1} = x_i - \frac{f(x_i)(x_{i-1} - x_i)}{f(x_{i-1}) - f(x_i)}\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Método de Müller</h3>
             <p>Utiliza una parábola (polinomio de segundo grado) que pasa por tres puntos. Permite encontrar raíces complejas.</p>
             <div class="formula-box">\[x_3 = x_2 + \frac{-2c}{b \pm \sqrt{b^2 - 4ac}}\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Método de Bairstow</h3>
             <p>Específico para polinomios. Encuentra factores cuadráticos del tipo \(x^2 - rx - s\) para hallar raíces reales y complejas.</p>
             <div class="formula-box">\[r = r + \Delta r, \quad s = s + \Delta s\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Regla de Horner</h3>
-            <p>Algoritmo para evaluar polinomios de forma eficiente reduciendo el número de multiplicaciones.</p>
-            <div class="formula-box">\[b_i = a_i + b_{i+1}x\]</div>
+            <p>Algoritmo para evaluar polinomios de forma eficiente reduciendo el número de multiplicaciones. Usado también para Newton sobre polinomios.</p>
+            <div class="formula-box">\[b_i = a_i + b_{i+1}\,x\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Newton para Sistemas</h3>
             <p>Extensión para resolver múltiples ecuaciones no lineales simultáneamente usando la matriz Jacobiana.</p>
             <div class="formula-box">\[[J]\{\Delta x\} = -\{f\}\]</div>
           </div>
+
           <div class="carousel-slide">
             <h3>Método de Jacobi</h3>
-            <p>Método iterativo para sistemas lineales \( A\mathbf{x} = \mathbf{b} \). Descompone \( A = D + L + U \) (diagonal, triangular inferior y superior). En cada paso, cada incógnita se recalcula con los valores <em>anteriores</em> de las demás. Converge si la matriz es diagonalmente dominante.</p>
+            <p>Método iterativo para sistemas lineales \(A\mathbf{x}=\mathbf{b}\). En cada paso recalcula cada incógnita con los valores <em>anteriores</em> de las demás. Converge si la matriz es diagonalmente dominante.</p>
             <div class="formula-box">\[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j \neq i} a_{ij}\, x_j^{(k)} \right) \]</div>
-            <p class="slide-nota">Forma matricial: \( \mathbf{x}^{(k+1)} = D^{-1}\big(\mathbf{b} - (L+U)\mathbf{x}^{(k)}\big) \). El error disminuye iteración a iteración hasta alcanzar la tolerancia.</p>
+            <p class="slide-nota">Forma matricial: \(\mathbf{x}^{(k+1)} = D^{-1}\bigl(\mathbf{b} - (L+U)\mathbf{x}^{(k)}\bigr)\).</p>
           </div>
+
           <div class="carousel-slide">
             <h3>Método de Gauss-Seidel</h3>
-            <p>Variante iterativa de Jacobi para \( A\mathbf{x} = \mathbf{b} \). A diferencia de Jacobi, usa los valores <em>ya actualizados</em> en la misma iteración (\( x_j^{(k+1)} \) para \( j &lt; i \)). Suele converger más rápido que Jacobi bajo las mismas condiciones.</p>
+            <p>Variante de Jacobi que usa los valores <em>ya actualizados</em> en la misma iteración. Suele converger más rápido bajo las mismas condiciones.</p>
             <div class="formula-box">\[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j=1}^{i-1} a_{ij}\, x_j^{(k+1)} - \sum_{j=i+1}^{n} a_{ij}\, x_j^{(k)} \right) \]</div>
-            <p class="slide-nota">Forma matricial: \( \mathbf{x}^{(k+1)} = (D+L)^{-1}\big(\mathbf{b} - U\mathbf{x}^{(k)}\big) \). Converge si la matriz es diagonalmente dominante.</p>
+            <p class="slide-nota">Forma matricial: \(\mathbf{x}^{(k+1)} = (D+L)^{-1}\bigl(\mathbf{b} - U\mathbf{x}^{(k)}\bigr)\).</p>
           </div>
+
+          <div class="carousel-slide">
+            <h3>Euler Simple</h3>
+            <p>Método de un paso para EDOs de la forma \(y'=f(x,y)\). Avanza usando la pendiente al inicio del intervalo. Sencillo pero con error de truncamiento \(O(h)\).</p>
+            <div class="formula-box">\[y_{i+1} = y_i + h\,f(x_i,\,y_i)\]</div>
+            <p class="slide-nota">A menor \(h\) mayor precisión, pero más pasos de cálculo.</p>
+          </div>
+
+          <div class="carousel-slide">
+            <h3>Euler Modificado (Heun)</h3>
+            <p>Mejora Euler promediando la pendiente al inicio y al final del paso (predictor-corrector). Error de truncamiento \(O(h^2)\).</p>
+            <div class="formula-box">\[y_{i+1} = y_i + \frac{h}{2}\bigl[f(x_i,y_i) + f(x_{i+1},\tilde{y}_{i+1})\bigr]\]</div>
+            <p class="slide-nota">Predictor: \(\tilde{y}_{i+1} = y_i + h\,f(x_i,y_i)\).</p>
+          </div>
+
+          <div class="carousel-slide">
+            <h3>Integración de Romberg</h3>
+            <p>Combina la regla del trapecio compuesta con la extrapolación de Richardson para obtener resultados de alta precisión con pocos niveles.</p>
+            <div class="formula-box">\[R(i,j) = \frac{4^j\,R(i,j-1) - R(i-1,j-1)}{4^j - 1}\]</div>
+            <p class="slide-nota">La diagonal \(R(n,n)\) es la mejor estimación. Converge muy rápido cuando \(f\) es suave.</p>
+          </div>
+
         </div>
       </div>
       <div class="carousel-dots" id="carousel-dots" aria-label="Navegación del carrusel"></div>
@@ -153,26 +317,27 @@
     </div>
   </div>
 
-    <div class="export-workbook-mobile" aria-label="Exportar ambos métodos">
-      <button type="button" class="btn-export-workbook btn-export-workbook--compact" onclick="exportarTodo()" title="Exportar todos los métodos a Excel">
-        <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
-        Libro Excel
-      </button>
-    </div>
+  <div class="export-workbook-mobile" aria-label="Exportar ambos métodos">
+    <button type="button" class="btn-export-workbook btn-export-workbook--compact" onclick="exportarTodo()" title="Exportar todos los métodos a Excel">
+      <span class="btn-export-workbook-icon" aria-hidden="true">⎘</span>
+      Libro Excel
+    </button>
+  </div>
 
 <div class="main-content">
 
+  <!-- ══ HERO ══ -->
   <section class="hero-section" id="inicio">
     <div class="hero-content">
       <p class="hero-badge">Plataforma interactiva</p>
       <h1 class="hero-title">Métodos Numéricos</h1>
-      <p class="hero-desc">Calcula, visualiza y exporta resultados de 12 métodos en un solo lugar. Selecciona un método en el menú lateral o explora la guía interactiva.</p>
+      <p class="hero-desc">Calcula, visualiza y exporta resultados de 14 métodos en un solo lugar. Selecciona un método en el menú lateral o explora la guía interactiva.</p>
       <div class="hero-actions">
         <button type="button" class="hero-btn hero-btn-primary" onclick="abrirGuia()">Ver guía de métodos</button>
         <a class="hero-btn hero-btn-secondary" href="#biseccion">Comenzar con Bisección</a>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><strong>12</strong><span>Métodos</span></div>
+        <div class="hero-stat"><strong>14</strong><span>Métodos</span></div>
         <div class="hero-stat"><strong>MySQL</strong><span>Persistencia</span></div>
         <div class="hero-stat"><strong>Excel</strong><span>Exportación</span></div>
       </div>
@@ -182,178 +347,126 @@
     </div>
   </section>
 
+  <!-- ══ BISECCIÓN ══ -->
   <section id="biseccion" class="biseccion-scroll-section method-section">
-    <div class="titulo-metodo">
-      Método de bisección
-    </div>
+    <div class="titulo-metodo">Método de bisección</div>
     <div class="contenido-scroll">
-    <form action="http://127.0.0.1:5000/biseccion" method="POST">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="ejercicio">Ejercicio</label>
-          <input type="text" id="ejercicio" name="ejercicio">
+      <form action="http://127.0.0.1:5000/biseccion" method="POST">
+        <div class="form-row">
+          <div class="form-group"><label for="ejercicio">Ejercicio</label><input type="text" id="ejercicio" name="ejercicio"></div>
+          <div class="form-group"><label for="funcion">Función</label><input type="text" id="funcion" name="funcion"></div>
+          <div class="form-group"><label for="xa">X<sup>a</sup></label><input type="text" id="xa" name="xa"></div>
+          <div class="form-group"><label for="xb">X<sup>b</sup></label><input type="text" id="xb" name="xb"></div>
+          <div class="form-group"><label for="es">Es%</label><input type="text" id="es" name="es"></div>
         </div>
-        <div class="form-group">
-          <label for="funcion">Funcion</label>
-          <input type="text" id="funcion" name="funcion">
+        <div class="botones-biseccion">
+          <button type="button" onclick="buscarPorEjercicio(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicio(event)">Eliminar</button>
+          <button type="submit">Calcular</button>
+          <button type="button" onclick="actualizarEjercicio(event)">Actualizar</button>
         </div>
-        <div class="form-group">
-          <label for="xa">X^a</label>
-          <input type="text" id="xa" name="xa">
-        </div>
-        <div class="form-group">
-          <label for="xb">X^b</label>
-          <input type="text" id="xb" name="xb">
-        </div>
-        <div class="form-group">
-          <label for="es">Es%</label>
-          <input type="text" id="es" name="es">
-        </div>
-      </div>
-      <div class="botones-biseccion">
-        <button type="button" onclick="buscarPorEjercicio(event)">Buscar</button>
-        <button type="button" onclick="eliminarEjercicio(event)"> Eliminar</button>
-        <button type="submit"> Calcular</button>
-        <button type="button" onclick="actualizarEjercicio(event)"> Actualizar</button>
-      </div>
-    </form>
-    <div class="tabla-contenedor">
-      <h2>Resultados del Método de Bisección</h2>
-      <div class="tabla-scroll">
-        <table id="tabla-resultados">
-          <thead>
-            <tr>
-              <th>Ejercicio</th>
-              <th>Iteración</th>
-              <th>X<sup>a</sup></th>
-              <th>X<sup>b</sup></th>
-              <th>f(X<sup>a</sup>)</th>
-              <th>f(X<sup>b</sup>)</th>
-              <th>X<sup>r</sup></th>
-              <th>f(X<sup>r</sup>)</th>
-              <th>Ea</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div> 
+      </form>
 
-      <div class="tabla-acciones">
-        <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados', 'biseccion_resultados.xlsx', 'Biseccion')">
-          Exportar esta tabla a Excel
-        </button>
+      <div class="resultado-final-box" id="resultado-biseccion">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-biseccion"></span>
+        </div>
       </div>
-      
-    </div>
-    <div class="grafica-container">
-      <h2>Gráfica del Método de Bisección</h2>
-      <div class="selector">
-        <label for="ejercicioSelect">Seleccionar ejercicio:</label>
-        <select id="ejercicioSelect" onchange="cargarGrafica()"></select>
+
+      <div class="tabla-contenedor">
+        <h2>Resultados del Método de Bisección</h2>
+        <div class="tabla-scroll">
+          <table id="tabla-resultados">
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>X<sup>a</sup></th><th>X<sup>b</sup></th>
+              <th>f(X<sup>a</sup>)</th><th>f(X<sup>b</sup>)</th><th>X<sup>r</sup></th><th>f(X<sup>r</sup>)</th><th>Ea</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="tabla-acciones">
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados','biseccion_resultados.xlsx','Biseccion')">Exportar esta tabla a Excel</button>
+        </div>
       </div>
-      <iframe id="grafica-interactiva" src="/static/imagenes/biseccion.html"></iframe>
+
+      <div class="grafica-container">
+        <h2>Gráfica del Método de Bisección</h2>
+        <div class="selector">
+          <label for="ejercicioSelect">Seleccionar ejercicio:</label>
+          <select id="ejercicioSelect" onchange="cargarGrafica()"></select>
+        </div>
+        <iframe id="grafica-interactiva" src="/static/imagenes/biseccion.html"></iframe>
+      </div>
     </div>
   </section>
 
-
+  <!-- ══ FALSA POSICIÓN ══ -->
   <section id="falsa" class="falsa-scroll-section method-section">
     <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Falsa Posición
-    </div>
+    <div class="titulo-metodo">Método de Falsa Posición</div>
     <div class="contenido-scroll">
       <form action="http://127.0.0.1:5000/falsa-posicion" method="POST">
         <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-falsa">Ejercicio</label>
-            <input type="text" id="ejercicio-falsa" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-falsa">Función</label>
-            <input type="text" id="funcion-falsa" name="funcion">
-          </div>
-          <div class="form-group">
-            <label for="xa-falsa">X<sup>a</sup></label>
-            <input type="text" id="xa-falsa" name="xa">
-          </div>
-          <div class="form-group">
-            <label for="xb-falsa">X<sup>b</sup></label>
-            <input type="text" id="xb-falsa" name="xb">
-          </div>
-          <div class="form-group">
-            <label for="es-falsa">Es%</label>
-            <input type="text" id="es-falsa" name="es">
-          </div>
+          <div class="form-group"><label for="ejercicio-falsa">Ejercicio</label><input type="text" id="ejercicio-falsa" name="ejercicio"></div>
+          <div class="form-group"><label for="funcion-falsa">Función</label><input type="text" id="funcion-falsa" name="funcion"></div>
+          <div class="form-group"><label for="xa-falsa">X<sup>a</sup></label><input type="text" id="xa-falsa" name="xa"></div>
+          <div class="form-group"><label for="xb-falsa">X<sup>b</sup></label><input type="text" id="xb-falsa" name="xb"></div>
+          <div class="form-group"><label for="es-falsa">Es%</label><input type="text" id="es-falsa" name="es"></div>
         </div>
         <div class="botones-biseccion">
-          <button type="button" onclick="buscarPorEjercicioFalsa(event)"> Buscar</button>
-          <button type="button" onclick="eliminarEjercicioFalsa(event)"> Eliminar</button>
+          <button type="button" onclick="buscarPorEjercicioFalsa(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicioFalsa(event)">Eliminar</button>
           <button type="submit">Calcular</button>
-          <button type="button" onclick="actualizarEjercicioFalsa(event)"> Actualizar</button>
+          <button type="button" onclick="actualizarEjercicioFalsa(event)">Actualizar</button>
         </div>
       </form>
-  
+
+      <div class="resultado-final-box" id="resultado-falsa">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-falsa"></span>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados del Método de Falsa Posición</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-falsa">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>X<sup>a</sup></th>
-                <th>X<sup>b</sup></th>
-                <th>f(X<sup>a</sup>)</th>
-                <th>f(X<sup>b</sup>)</th>
-                <th>X<sup>r</sup></th>
-                <th>f(X<sup>r</sup>)</th>
-                <th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>X<sup>a</sup></th><th>X<sup>b</sup></th>
+              <th>f(X<sup>a</sup>)</th><th>f(X<sup>b</sup>)</th><th>X<sup>r</sup></th><th>f(X<sup>r</sup>)</th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
-        </div> 
+        </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-falsa', 'falsa_posicion_resultados.xlsx', 'FalsaPosicion')">
-            Exportar esta tabla a Excel
-          </button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-falsa','falsa_posicion_resultados.xlsx','FalsaPosicion')">Exportar esta tabla a Excel</button>
         </div>
       </div>
+
       <div class="grafica-container">
         <h2>Gráfica del Método de Falsa Posición</h2>
         <div class="selector">
           <label for="ejercicioSelectFalsa">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectFalsa" onchange="cargarGraficaFalsa()"></select>
         </div>
-        <iframe id="grafica-interactiva-falsa" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-falsa" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ PUNTO FIJO ══ -->
   <section id="punto-fijo" class="puntofijo-scroll-section method-section">
     <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Punto Fijo
-    </div>
+    <div class="titulo-metodo">Método de Punto Fijo</div>
     <div class="contenido-scroll">
       <form action="http://127.0.0.1:5000/punto-fijo" method="POST">
         <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-pf">Ejercicio</label>
-            <input type="text" id="ejercicio-pf" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-pf">g(x)</label>
-            <input type="text" id="funcion-pf" name="funcion" placeholder="Ejemplo: cos(x)">
-          </div>
-          <div class="form-group">
-            <label for="xi-pf">Xi</label>
-            <input type="text" id="xi-pf" name="xi">
-          </div>
-          <div class="form-group">
-            <label for="es-pf">Es%</label>
-            <input type="text" id="es-pf" name="es">
-          </div>
+          <div class="form-group"><label for="ejercicio-pf">Ejercicio</label><input type="text" id="ejercicio-pf" name="ejercicio"></div>
+          <div class="form-group"><label for="funcion-pf">g(x)</label><input type="text" id="funcion-pf" name="funcion" placeholder="Ejemplo: cos(x)"></div>
+          <div class="form-group"><label for="xi-pf">Xi</label><input type="text" id="xi-pf" name="xi"></div>
+          <div class="form-group"><label for="es-pf">Es%</label><input type="text" id="es-pf" name="es"></div>
         </div>
         <div class="botones-biseccion">
           <button type="button" onclick="buscarPorEjercicioPuntoFijo(event)">Buscar</button>
@@ -363,26 +476,25 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-puntofijo">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-puntofijo"></span>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados del Método de Punto Fijo</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-puntofijo">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>Xi</th>
-                <th>g(Xi)</th>
-                <th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>Xi</th><th>g(Xi)</th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-puntofijo', 'punto_fijo_resultados.xlsx', 'PuntoFijo')">
-            Exportar esta tabla a Excel
-          </button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-puntofijo','punto_fijo_resultados.xlsx','PuntoFijo')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -392,16 +504,15 @@
           <label for="ejercicioSelectPuntoFijo">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectPuntoFijo" onchange="cargarGraficaPuntoFijo()"></select>
         </div>
-        <iframe id="grafica-interactiva-puntofijo" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-puntofijo" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ NEWTON-RAPHSON ══ -->
   <section id="newton" class="newton-scroll-section method-section">
     <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Método de Newton-Raphson
-    </div>
+    <div class="titulo-metodo">Método de Newton-Raphson</div>
     <div class="contenido-scroll">
       <div class="selector" style="justify-content:center;">
         <label for="newtonTipo">Variante:</label>
@@ -411,29 +522,13 @@
           <option value="NUM">Derivada numérica</option>
         </select>
       </div>
-
       <form id="form-newton" action="http://127.0.0.1:5000/newton-clasico" method="POST">
         <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-newton">Ejercicio</label>
-            <input type="text" id="ejercicio-newton" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="funcion-newton">f(x)</label>
-            <input type="text" id="funcion-newton" name="funcion" placeholder="Ejemplo: x^3 - 2x - 5">
-          </div>
-          <div class="form-group" id="grupo-derivada-newton">
-            <label for="derivada-newton">f'(x)</label>
-            <input type="text" id="derivada-newton" name="derivada" placeholder="Ejemplo: 3x^2 - 2">
-          </div>
-          <div class="form-group">
-            <label for="xi-newton">Xi</label>
-            <input type="text" id="xi-newton" name="xi">
-          </div>
-          <div class="form-group">
-            <label for="es-newton">Es%</label>
-            <input type="text" id="es-newton" name="es">
-          </div>
+          <div class="form-group"><label for="ejercicio-newton">Ejercicio</label><input type="text" id="ejercicio-newton" name="ejercicio"></div>
+          <div class="form-group"><label for="funcion-newton">f(x)</label><input type="text" id="funcion-newton" name="funcion" placeholder="Ejemplo: x^3 - 2x - 5"></div>
+          <div class="form-group" id="grupo-derivada-newton"><label for="derivada-newton">f'(x)</label><input type="text" id="derivada-newton" name="derivada" placeholder="Ejemplo: 3x^2 - 2"></div>
+          <div class="form-group"><label for="xi-newton">Xi</label><input type="text" id="xi-newton" name="xi"></div>
+          <div class="form-group"><label for="es-newton">Es%</label><input type="text" id="es-newton" name="es"></div>
         </div>
         <div class="botones-biseccion">
           <button type="button" onclick="buscarPorEjercicioNewton(event)">Buscar</button>
@@ -443,28 +538,25 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-newton">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-newton"></span>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados del Método de Newton-Raphson</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-newton">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>Xi</th>
-                <th>f(Xi)</th>
-                <th>f'(Xi)</th>
-                <th>Xi+1</th>
-                <th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>Xi</th><th>f(Xi)</th><th>f'(Xi)</th><th>Xi+1</th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-newton', 'newton_raphson_resultados.xlsx', 'NewtonRaphson')">
-            Exportar esta tabla a Excel
-          </button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-newton','newton_raphson_resultados.xlsx','NewtonRaphson')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -474,51 +566,26 @@
           <label for="ejercicioSelectNewton">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectNewton" onchange="cargarGraficaNewton()"></select>
         </div>
-        <iframe id="grafica-interactiva-newton" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-newton" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ NEWTON SISTEMAS ══ -->
   <section id="newton-sistemas" class="senl-scroll-section method-section">
     <hr class="linea-seccion">
-    <div class="titulo-metodo">
-      Newton-Raphson para Sistemas (3 variables)
-    </div>
+    <div class="titulo-metodo">Newton-Raphson para Sistemas (3 variables)</div>
     <div class="contenido-scroll">
       <form action="/newton-sistemas" method="POST" id="form-newton-sistemas">
         <div class="form-row">
-          <div class="form-group">
-            <label for="ejercicio-ns">Ejercicio</label>
-            <input type="text" id="ejercicio-ns" name="ejercicio">
-          </div>
-          <div class="form-group">
-            <label for="f1-ns">F1(x,y,z)</label>
-            <input type="text" id="f1-ns" name="f1" placeholder="Ej: x+y+z-3">
-          </div>
-          <div class="form-group">
-            <label for="f2-ns">F2(x,y,z)</label>
-            <input type="text" id="f2-ns" name="f2" placeholder="Ej: x^2+y^2+z^2-5">
-          </div>
-          <div class="form-group">
-            <label for="f3-ns">F3(x,y,z)</label>
-            <input type="text" id="f3-ns" name="f3" placeholder="Ej: x-y+z-1">
-          </div>
-          <div class="form-group">
-            <label for="x-ns">x</label>
-            <input type="text" id="x-ns" name="x">
-          </div>
-          <div class="form-group">
-            <label for="y-ns">y</label>
-            <input type="text" id="y-ns" name="y">
-          </div>
-          <div class="form-group">
-            <label for="z-ns">z</label>
-            <input type="text" id="z-ns" name="z">
-          </div>
-          <div class="form-group">
-            <label for="es-ns">Es</label>
-            <input type="text" id="es-ns" name="es">
-          </div>
+          <div class="form-group"><label for="ejercicio-ns">Ejercicio</label><input type="text" id="ejercicio-ns" name="ejercicio"></div>
+          <div class="form-group"><label for="f1-ns">F1(x,y,z)</label><input type="text" id="f1-ns" name="f1" placeholder="Ej: x+y+z-3"></div>
+          <div class="form-group"><label for="f2-ns">F2(x,y,z)</label><input type="text" id="f2-ns" name="f2" placeholder="Ej: x^2+y^2+z^2-5"></div>
+          <div class="form-group"><label for="f3-ns">F3(x,y,z)</label><input type="text" id="f3-ns" name="f3" placeholder="Ej: x-y+z-1"></div>
+          <div class="form-group"><label for="x-ns">x</label><input type="text" id="x-ns" name="x"></div>
+          <div class="form-group"><label for="y-ns">y</label><input type="text" id="y-ns" name="y"></div>
+          <div class="form-group"><label for="z-ns">z</label><input type="text" id="z-ns" name="z"></div>
+          <div class="form-group"><label for="es-ns">Es</label><input type="text" id="es-ns" name="es"></div>
         </div>
         <div class="botones-biseccion">
           <button type="button" onclick="buscarPorEjercicioNewtonSistemas(event)">Buscar</button>
@@ -528,32 +595,30 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-newton-sistemas">
+        <div class="resultado-final-multi">
+          <span class="resultado-final-label">Resultado final — Solución del sistema</span>
+          <div class="resultado-row">
+            <div class="resultado-item"><span class="resultado-item-label">x</span><span class="resultado-item-valor" id="val-ns-x"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">y</span><span class="resultado-item-valor" id="val-ns-y"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">z</span><span class="resultado-item-valor" id="val-ns-z"></span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados — Newton Sistemas</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-newton-sistemas">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>x</th>
-                <th>y</th>
-                <th>z</th>
-                <th>F1</th>
-                <th>F2</th>
-                <th>F3</th>
-                <th>Δx</th>
-                <th>Δy</th>
-                <th>Δz</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>x</th><th>y</th><th>z</th>
+              <th>F1</th><th>F2</th><th>F3</th><th>Δx</th><th>Δy</th><th>Δz</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-newton-sistemas', 'newton_sistemas_resultados.xlsx', 'NewtonSistemas')">
-            Exportar esta tabla a Excel
-          </button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-newton-sistemas','newton_sistemas_resultados.xlsx','NewtonSistemas')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -563,37 +628,23 @@
           <label for="ejercicioSelectNewtonSistemas">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectNewtonSistemas" onchange="cargarGraficaNewtonSistemas()"></select>
         </div>
-        <iframe id="grafica-interactiva-newton-sistemas" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-newton-sistemas" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ JACOBI ══ -->
   <section id="jacobi" class="jacobi-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de Jacobi (sistemas lineales 3×3)</div>
     <div class="contenido-scroll">
       <form method="POST" id="form-jacobi">
         <div class="form-row">
-          <div class="form-group">
-            <label for="ej-jac">Ejercicio</label>
-            <input type="text" id="ej-jac" name="ejercicio">
-          </div>
-          <div class="form-group" style="grid-column: span 2;">
-            <label for="matriz-jac">Matriz A (filas con ;)</label>
-            <input type="text" id="matriz-jac" name="matriz" placeholder="4,-1,0;-1,4,-1;0,-1,4">
-          </div>
-          <div class="form-group">
-            <label for="b-jac">Vector b</label>
-            <input type="text" id="b-jac" name="b" placeholder="1,2,3">
-          </div>
-          <div class="form-group">
-            <label for="x0-jac">Vector x⁽⁰⁾</label>
-            <input type="text" id="x0-jac" name="x0" placeholder="0,0,0">
-          </div>
-          <div class="form-group">
-            <label for="es-jac">Es%</label>
-            <input type="text" id="es-jac" name="es" value="0.001">
-          </div>
+          <div class="form-group"><label for="ej-jac">Ejercicio</label><input type="text" id="ej-jac" name="ejercicio"></div>
+          <div class="form-group" style="grid-column:span 2;"><label for="matriz-jac">Matriz A (filas con ;)</label><input type="text" id="matriz-jac" name="matriz" placeholder="4,-1,0;-1,4,-1;0,-1,4"></div>
+          <div class="form-group"><label for="b-jac">Vector b</label><input type="text" id="b-jac" name="b" placeholder="1,2,3"></div>
+          <div class="form-group"><label for="x0-jac">Vector x⁽⁰⁾</label><input type="text" id="x0-jac" name="x0" placeholder="0,0,0"></div>
+          <div class="form-group"><label for="es-jac">Es%</label><input type="text" id="es-jac" name="es" value="0.001"></div>
         </div>
         <div class="botones-biseccion">
           <button type="button" onclick="buscarPorEjercicioJacobi(event)">Buscar</button>
@@ -603,27 +654,29 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-jacobi">
+        <div class="resultado-final-multi">
+          <span class="resultado-final-label">Resultado final — Solución del sistema</span>
+          <div class="resultado-row">
+            <div class="resultado-item"><span class="resultado-item-label">x₁</span><span class="resultado-item-valor" id="val-jac-x1"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">x₂</span><span class="resultado-item-valor" id="val-jac-x2"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">x₃</span><span class="resultado-item-valor" id="val-jac-x3"></span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados del Método de Jacobi</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-jacobi">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>x<sub>1</sub></th>
-                <th>x<sub>2</sub></th>
-                <th>x<sub>3</sub></th>
-                <th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>x<sub>1</sub></th><th>x<sub>2</sub></th><th>x<sub>3</sub></th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-jacobi', 'jacobi_resultados.xlsx', 'Jacobi')">
-            Exportar esta tabla a Excel
-          </button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-jacobi','jacobi_resultados.xlsx','Jacobi')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -633,37 +686,23 @@
           <label for="ejercicioSelectJacobi">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectJacobi" onchange="cargarGraficaJacobi()"></select>
         </div>
-        <iframe id="grafica-interactiva-jacobi" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-jacobi" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ GAUSS-SEIDEL ══ -->
   <section id="gauss-seidel" class="gauss-seidel-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de Gauss-Seidel (sistemas lineales 3×3)</div>
     <div class="contenido-scroll">
       <form method="POST" id="form-gauss-seidel">
         <div class="form-row">
-          <div class="form-group">
-            <label for="ej-gs">Ejercicio</label>
-            <input type="text" id="ej-gs" name="ejercicio">
-          </div>
-          <div class="form-group" style="grid-column: span 2;">
-            <label for="matriz-gs">Matriz A (filas con ;)</label>
-            <input type="text" id="matriz-gs" name="matriz" placeholder="4,-1,0;-1,4,-1;0,-1,4">
-          </div>
-          <div class="form-group">
-            <label for="b-gs">Vector b</label>
-            <input type="text" id="b-gs" name="b" placeholder="1,2,3">
-          </div>
-          <div class="form-group">
-            <label for="x0-gs">Vector x⁽⁰⁾</label>
-            <input type="text" id="x0-gs" name="x0" placeholder="0,0,0">
-          </div>
-          <div class="form-group">
-            <label for="es-gs">Es%</label>
-            <input type="text" id="es-gs" name="es" value="0.001">
-          </div>
+          <div class="form-group"><label for="ej-gs">Ejercicio</label><input type="text" id="ej-gs" name="ejercicio"></div>
+          <div class="form-group" style="grid-column:span 2;"><label for="matriz-gs">Matriz A (filas con ;)</label><input type="text" id="matriz-gs" name="matriz" placeholder="4,-1,0;-1,4,-1;0,-1,4"></div>
+          <div class="form-group"><label for="b-gs">Vector b</label><input type="text" id="b-gs" name="b" placeholder="1,2,3"></div>
+          <div class="form-group"><label for="x0-gs">Vector x⁽⁰⁾</label><input type="text" id="x0-gs" name="x0" placeholder="0,0,0"></div>
+          <div class="form-group"><label for="es-gs">Es%</label><input type="text" id="es-gs" name="es" value="0.001"></div>
         </div>
         <div class="botones-biseccion">
           <button type="button" onclick="buscarPorEjercicioGaussSeidel(event)">Buscar</button>
@@ -673,27 +712,29 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-gauss-seidel">
+        <div class="resultado-final-multi">
+          <span class="resultado-final-label">Resultado final — Solución del sistema</span>
+          <div class="resultado-row">
+            <div class="resultado-item"><span class="resultado-item-label">x₁</span><span class="resultado-item-valor" id="val-gs-x1"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">x₂</span><span class="resultado-item-valor" id="val-gs-x2"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">x₃</span><span class="resultado-item-valor" id="val-gs-x3"></span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados del Método de Gauss-Seidel</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-gauss-seidel">
-            <thead>
-              <tr>
-                <th>Ejercicio</th>
-                <th>Iteración</th>
-                <th>x<sub>1</sub></th>
-                <th>x<sub>2</sub></th>
-                <th>x<sub>3</sub></th>
-                <th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>x<sub>1</sub></th><th>x<sub>2</sub></th><th>x<sub>3</sub></th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-gauss-seidel', 'gauss_seidel_resultados.xlsx', 'GaussSeidel')">
-            Exportar esta tabla a Excel
-          </button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-gauss-seidel','gauss_seidel_resultados.xlsx','GaussSeidel')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -703,11 +744,12 @@
           <label for="ejercicioSelectGaussSeidel">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectGaussSeidel" onchange="cargarGraficaGaussSeidel()"></select>
         </div>
-        <iframe id="grafica-interactiva-gauss-seidel" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-gauss-seidel" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ SECANTE ══ -->
   <section id="secante" class="secante-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de la Secante</div>
@@ -728,20 +770,25 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-secante">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-secante"></span>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados — Secante</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-secante">
-            <thead>
-              <tr>
-                <th>Ejercicio</th><th>Iteración</th><th>Xi-1</th><th>Xi</th><th>f(Xi-1)</th><th>f(Xi)</th><th>Xi+1</th><th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>Xi-1</th><th>Xi</th><th>f(Xi-1)</th><th>f(Xi)</th><th>Xi+1</th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-secante', 'secante_resultados.xlsx', 'Secante')">Exportar esta tabla a Excel</button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-secante','secante_resultados.xlsx','Secante')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -751,11 +798,12 @@
           <label for="ejercicioSelectSecante">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectSecante" onchange="cargarGraficaSecante()"></select>
         </div>
-        <iframe id="grafica-interactiva-secante" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-secante" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ MÜLLER ══ -->
   <section id="muller" class="muller-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de Müller</div>
@@ -777,20 +825,25 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-muller">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-muller"></span>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados — Müller</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-muller">
-            <thead>
-              <tr>
-                <th>Ejercicio</th><th>Iteración</th><th>x0</th><th>x1</th><th>x2</th><th>x3</th><th>f(x3)</th><th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>x0</th><th>x1</th><th>x2</th><th>x3</th><th>f(x3)</th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-muller', 'muller_resultados.xlsx', 'Muller')">Exportar esta tabla a Excel</button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-muller','muller_resultados.xlsx','Muller')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -800,11 +853,12 @@
           <label for="ejercicioSelectMuller">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectMuller" onchange="cargarGraficaMuller()"></select>
         </div>
-        <iframe id="grafica-interactiva-muller" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-muller" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
+  <!-- ══ BAIRSTOW ══ -->
   <section id="bairstow" class="bairstow-scroll-section method-section">
     <hr class="linea-seccion">
     <div class="titulo-metodo">Método de Bairstow (polinomios)</div>
@@ -812,7 +866,7 @@
       <form action="http://127.0.0.1:5000/bairstow" method="POST" id="form-bairstow">
         <div class="form-row">
           <div class="form-group"><label for="ej-bai">Ejercicio</label><input type="text" id="ej-bai" name="ejercicio"></div>
-          <div class="form-group" style="grid-column: span 2;"><label for="coef-bai">Coeficientes</label><input type="text" id="coef-bai" name="coeficientes" placeholder="Ej: 1, -3, -1, 3 (x^3 - 3x^2 - x + 3)"></div>
+          <div class="form-group" style="grid-column:span 2;"><label for="coef-bai">Coeficientes</label><input type="text" id="coef-bai" name="coeficientes" placeholder="Ej: 1, -3, -1, 3 (x^3 - 3x^2 - x + 3)"></div>
           <div class="form-group"><label for="r-bai">r</label><input type="text" id="r-bai" name="r"></div>
           <div class="form-group"><label for="s-bai">s</label><input type="text" id="s-bai" name="s"></div>
           <div class="form-group"><label for="es-bai">Es%</label><input type="text" id="es-bai" name="es"></div>
@@ -825,20 +879,28 @@
         </div>
       </form>
 
+      <div class="resultado-final-box" id="resultado-bairstow">
+        <div class="resultado-final-multi">
+          <span class="resultado-final-label">Resultado final — Factor cuadrático</span>
+          <div class="resultado-row">
+            <div class="resultado-item"><span class="resultado-item-label">r</span><span class="resultado-item-valor" id="val-bairstow-r"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">s</span><span class="resultado-item-valor" id="val-bairstow-s"></span></div>
+          </div>
+        </div>
+      </div>
+
       <div class="tabla-contenedor">
         <h2>Resultados — Bairstow</h2>
         <div class="tabla-scroll">
           <table id="tabla-resultados-bairstow">
-            <thead>
-              <tr>
-                <th>Ejercicio</th><th>Iteración</th><th>r</th><th>s</th><th>Δr</th><th>Δs</th><th>Ea</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>r</th><th>s</th><th>Δr</th><th>Δs</th><th>Ea</th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="tabla-acciones">
-          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-bairstow', 'bairstow_resultados.xlsx', 'Bairstow')">Exportar esta tabla a Excel</button>
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-bairstow','bairstow_resultados.xlsx','Bairstow')">Exportar esta tabla a Excel</button>
         </div>
       </div>
 
@@ -848,83 +910,187 @@
           <label for="ejercicioSelectBairstow">Seleccionar ejercicio:</label>
           <select id="ejercicioSelectBairstow" onchange="cargarGraficaBairstow()"></select>
         </div>
-        <iframe id="grafica-interactiva-bairstow" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="grafica-interactiva-bairstow" style="width:100%;height:500px;border:none;"></iframe>
       </div>
     </div>
   </section>
 
-   <!-- === MÉTODO DE HORNER === -->
-        <section id="horner-section" class="horner-scroll-section method-section">
-            <hr class="linea-seccion">
-            <div class="titulo-metodo">MÉTODO DE HORNER</div>
+  <!-- ══ HORNER ══ -->
+  <section id="horner-section" class="horner-scroll-section method-section">
+    <hr class="linea-seccion">
+    <div class="titulo-metodo">Método de Horner</div>
+    <div class="contenido-scroll">
+      <form id="form-horner" action="/horner" method="POST">
+        <div class="form-row">
+          <div class="form-group"><label for="ejercicio-horner">Ejercicio</label><input type="number" name="ejercicio" id="ejercicio-horner" required></div>
+          <div class="form-group" style="grid-column:span 2;"><label for="polinomio-horner">Polinomio P(x)</label><input type="text" name="polinomio" id="polinomio-horner" placeholder="x^3 - 6x^2 + 11x - 6" required></div>
+          <div class="form-group"><label for="x0-horner">X0</label><input type="number" step="any" name="x0" id="x0-horner" required></div>
+          <div class="form-group"><label for="es-horner">Es%</label><input type="number" step="any" name="es" id="es-horner" value="0.001" required></div>
+        </div>
+        <div class="botones-biseccion">
+          <button type="button" onclick="buscarPorEjercicioHorner(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicioHorner(event)">🗑 Eliminar</button>
+          <button type="submit">Calcular</button>
+          <button type="button" onclick="actualizarEjercicioHorner(event)">Actualizar</button>
+        </div>
+      </form>
 
-            <div class="contenido-scroll">
-                <form id="form-horner" action="/horner" method="POST">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="ejercicio-horner">Ejercicio</label>
-                            <input type="number" name="ejercicio" id="ejercicio-horner" required>
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label for="polinomio-horner">Polinomio P(x)</label>
-                            <input type="text" name="polinomio" id="polinomio-horner" placeholder="x^3 - 6x^2 + 11x - 6"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="x0-horner">X0</label>
-                            <input type="number" step="any" name="x0" id="x0-horner" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="es-horner">Es%</label>
-                            <input type="number" step="any" name="es" id="es-horner" value="0.001" required>
-                        </div>
-                    </div>
+      <div class="resultado-final-box" id="resultado-horner">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final — Raíz aproximada</span>
+          <span class="resultado-final-valor" id="val-horner"></span>
+        </div>
+      </div>
 
-                    <div class="botones-biseccion">
-                        <button type="button" onclick="buscarPorEjercicioHorner(event)">Buscar</button>
-                        <button type="button" onclick="eliminarEjercicioHorner(event)">🗑 Eliminar</button>
-                        <button type="submit">Calcular</button>
-                        <button type="button" onclick="actualizarEjercicioHorner(event)">Actualizar</button>
-                    </div>
-                </form>
+      <div class="tabla-contenedor">
+        <h2>Resultados — Horner</h2>
+        <div class="tabla-scroll">
+          <table id="tabla-resultados-horner">
+            <thead><tr>
+              <th>Ejercicio</th><th>Iter</th><th>Xi</th><th>f(Xi)</th><th>f'(Xi)</th><th>Xi+1</th><th>Ea (%)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="tabla-acciones">
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-horner','horner.xlsx','Horner')">Exportar a Excel</button>
+        </div>
+      </div>
 
-                <!-- Tabla de resultados -->
-                <div class="tabla-contenedor">
-                    <h2>Resultados - Horner</h2>
-                    <div class="tabla-scroll">
-                        <table id="tabla-resultados-horner">
-                            <thead>
-                                <tr>
-                                    <th>Ejercicio</th>
-                                    <th>Iter</th>
-                                    <th>Xi</th>
-                                    <th>f(Xi)</th>
-                                    <th>f'(Xi)</th>
-                                    <th>Xi+1</th>
-                                    <th>Ea (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="tabla-acciones">
-                        <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-horner', 'horner.xlsx', 'Horner')">
-                            Exportar a Excel
-                        </button>
-                    </div>
-                </div>
+      <div class="grafica-container">
+        <h2>Gráfica del Método de Horner</h2>
+        <div class="selector">
+          <label for="ejercicioSelectHorner">Seleccionar ejercicio:</label>
+          <select id="ejercicioSelectHorner" onchange="cargarGraficaHorner()"></select>
+        </div>
+        <iframe id="grafica-interactiva-horner" style="width:100%;height:500px;border:none;" frameborder="0"></iframe>
+      </div>
+    </div>
+  </section>
 
-                <!-- Gráfica -->
-                <div class="grafica-container">
-                    <h2>Gráfica del Método de Horner</h2>
-                    <div class="selector">
-                        <label for="ejercicioSelectHorner">Seleccionar ejercicio:</label>
-                        <select id="ejercicioSelectHorner" onchange="cargarGraficaHorner()"></select>
-                    </div>
-                    <iframe id="grafica-interactiva-horner" style="width:100%; height:500px; border:none;" frameborder="0"></iframe>
-                </div>
-            </div>
-        </section>
+  <!-- ══ EULER ══ -->
+  <section id="euler" class="euler-scroll-section method-section">
+    <hr class="linea-seccion">
+    <div class="titulo-metodo">Método de Euler</div>
+    <div class="contenido-scroll">
+      <div class="selector" style="justify-content:center;margin-bottom:18px;">
+        <label for="eulerTipo">Variante:</label>
+        <select id="eulerTipo" onchange="cambiarTipoEuler()">
+          <option value="SIM">Euler Simple</option>
+          <option value="MOD">Euler Modificado (Heun)</option>
+        </select>
+      </div>
+      <form id="form-euler">
+        <div class="form-row">
+          <div class="form-group"><label for="ej-euler">Ejercicio</label><input type="text" id="ej-euler" name="ejercicio"></div>
+          <div class="form-group" style="grid-column:span 2;"><label for="f-euler">f(x, y)</label><input type="text" id="f-euler" name="funcion" placeholder="Ej: -2*x^3 + 12*x^2 - 20*x + 8.5"></div>
+          <div class="form-group"><label for="x0-euler">x₀</label><input type="text" id="x0-euler" name="x0" placeholder="0"></div>
+          <div class="form-group"><label for="y0-euler">y₀</label><input type="text" id="y0-euler" name="y0" placeholder="1"></div>
+          <div class="form-group"><label for="xf-euler">x final</label><input type="text" id="xf-euler" name="xf" placeholder="4"></div>
+          <div class="form-group"><label for="h-euler">h (paso)</label><input type="text" id="h-euler" name="h" placeholder="0.5"></div>
+        </div>
+        <div class="botones-biseccion">
+          <button type="button" onclick="buscarPorEjercicioEuler(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicioEuler(event)">Eliminar</button>
+          <button type="submit">Calcular</button>
+          <button type="button" onclick="actualizarEjercicioEuler(event)">Actualizar</button>
+        </div>
+      </form>
+
+      <div class="resultado-final-box" id="resultado-euler">
+        <div class="resultado-final-multi">
+          <span class="resultado-final-label">Resultado final</span>
+          <div class="resultado-row">
+            <div class="resultado-item"><span class="resultado-item-label">x final</span><span class="resultado-item-valor" id="val-euler-x"></span></div>
+            <div class="resultado-item"><span class="resultado-item-label">y final</span><span class="resultado-item-valor" id="val-euler-y"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabla-contenedor">
+        <h2>Resultados del Método de Euler</h2>
+        <div class="tabla-scroll">
+          <table id="tabla-resultados-euler">
+            <thead><tr>
+              <th>Ejercicio</th><th>Iteración</th><th>x</th><th>y</th><th>f(x,y)</th><th>y nuevo</th><th>Ea (%)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="tabla-acciones">
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-euler','euler_resultados.xlsx','Euler')">Exportar a Excel</button>
+        </div>
+      </div>
+
+      <div class="grafica-container">
+        <h2>Gráfica del Método de Euler</h2>
+        <div class="selector">
+          <label for="ejercicioSelectEuler">Ejercicio:</label>
+          <select id="ejercicioSelectEuler" onchange="cargarGraficaEuler()"></select>
+        </div>
+        <iframe id="grafica-interactiva-euler" style="width:100%;height:500px;border:none;"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ ROMBERG ══ -->
+  <section id="romberg" class="romberg-scroll-section method-section">
+    <hr class="linea-seccion">
+    <div class="titulo-metodo">Método de Romberg (Integración numérica)</div>
+    <div class="contenido-scroll">
+      <form id="form-romberg">
+        <div class="form-row">
+          <div class="form-group"><label for="ej-rom">Ejercicio</label><input type="text" id="ej-rom" name="ejercicio"></div>
+          <div class="form-group" style="grid-column:span 2;"><label for="f-rom">f(x)</label><input type="text" id="f-rom" name="funcion" placeholder="Ej: x^3 + 4*x^2 - 10"></div>
+          <div class="form-group"><label for="a-rom">Límite a</label><input type="text" id="a-rom" name="a" placeholder="0"></div>
+          <div class="form-group"><label for="b-rom">Límite b</label><input type="text" id="b-rom" name="b" placeholder="4"></div>
+          <div class="form-group"><label for="niv-rom">Niveles</label><input type="text" id="niv-rom" name="niveles" placeholder="4" title="Máximo 10"></div>
+        </div>
+        <div class="botones-biseccion">
+          <button type="button" onclick="buscarPorEjercicioRomberg(event)">Buscar</button>
+          <button type="button" onclick="eliminarEjercicioRomberg(event)">Eliminar</button>
+          <button type="submit">Calcular</button>
+          <button type="button" onclick="actualizarEjercicioRomberg(event)">Actualizar</button>
+        </div>
+      </form>
+
+      <div class="resultado-final-box" id="romberg-resultado-box">
+        <div class="resultado-final-inner">
+          <span class="resultado-final-label">Resultado final</span>
+          <span class="resultado-final-valor" id="romberg-resultado-valor"></span>
+        </div>
+      </div>
+
+      <div class="tabla-contenedor">
+        <h2>Tabla de Romberg — R[Nivel][Columna]</h2>
+        <div class="tabla-scroll">
+          <table id="tabla-resultados-romberg">
+            <thead><tr>
+              <th>Ejercicio</th><th>Nivel (i)</th><th>Columna (j)</th><th>R[i][j]</th><th>Ea (%)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="tabla-acciones">
+          <button type="button" class="btn-export-sheet" onclick="exportarTabla('tabla-resultados-romberg','romberg_resultados.xlsx','Romberg')">Exportar a Excel</button>
+        </div>
+      </div>
+
+      <div class="grafica-container">
+        <h2>Función a integrar</h2>
+        <div class="selector">
+          <label for="ejercicioSelectRomberg">Ejercicio:</label>
+          <select id="ejercicioSelectRomberg" onchange="cargarGraficasRomberg()"></select>
+        </div>
+        <iframe id="grafica-romberg-func" style="width:100%;height:420px;border:none;"></iframe>
+      </div>
+
+      <div class="grafica-container">
+        <h2>Convergencia de la diagonal</h2>
+        <iframe id="grafica-romberg-conv" style="width:100%;height:380px;border:none;"></iframe>
+      </div>
+    </div>
+  </section>
 
   <footer class="app-footer">
     <p>Métodos Numéricos — Proyecto académico</p>
@@ -937,5 +1103,228 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="Funciones.js?v=4"></script>
 <script src="Funciones_fix.js"></script>
+<script src="resultado_final_js.js"></script>
+
+<script>
+// ══ EULER ══
+function obtenerTipoEuler() {
+  return document.getElementById("eulerTipo")?.value || "SIM";
+}
+function cambiarTipoEuler() { cargarResultadosEuler(); }
+
+function limpiarGraficaEuler() {
+  const f = document.getElementById('grafica-interactiva-euler');
+  if (f) f.srcdoc = `<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100%;background:#161b27;color:#8492a6;font-family:Arial,sans-serif;">Sin datos para mostrar.</body></html>`;
+}
+function cargarGraficaEuler() {
+  const tipo = obtenerTipoEuler().toLowerCase();
+  const ej   = document.getElementById('ejercicioSelectEuler')?.value;
+  if (!ej) { limpiarGraficaEuler(); return; }
+  const f = document.getElementById('grafica-interactiva-euler');
+  f.removeAttribute('srcdoc');
+  f.src = `/static/imagenes/euler_${tipo}_${ej}.html?t=${Date.now()}`;
+}
+function actualizarSelectEuler() {
+  const tipo = obtenerTipoEuler();
+  fetch(`/resultados-euler/${tipo}`).then(r=>r.json()).then(data=>{
+    const ejs = [...new Set((data||[]).map(r=>r[0]))];
+    const sel = document.getElementById('ejercicioSelectEuler');
+    if (!sel) return;
+    sel.innerHTML='';
+    ejs.forEach(ej=>{ const o=document.createElement('option'); o.value=ej; o.textContent=`Ejercicio ${ej}`; sel.appendChild(o); });
+    if (ejs.length) { sel.value=ejs[ejs.length-1]; cargarGraficaEuler(); } else limpiarGraficaEuler();
+  });
+}
+function cargarResultadosEuler() {
+  const tipo = obtenerTipoEuler();
+  fetch(`/resultados-euler/${tipo}`).then(r=>r.json()).then(data=>{
+    const tbody = document.querySelector("#tabla-resultados-euler tbody");
+    if (!tbody) return;
+    tbody.innerHTML="";
+    (data||[]).forEach(fila=>{
+      const tr=document.createElement("tr");
+      fila.forEach((c,i)=>{
+        const td=document.createElement("td");
+        const n=Number(c);
+        td.textContent=(!isNaN(n)&&c!==null&&c!=='')?(Number.isInteger(n)?n:parseFloat(n.toFixed(8))):c;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    // resultado final
+    setTimeout(()=>{
+      const filas=tbody.querySelectorAll('tr');
+      if (!filas.length) return;
+      const ultima=Array.from(filas[filas.length-1].querySelectorAll('td')).map(td=>td.textContent.trim());
+      const box=document.getElementById('resultado-euler');
+      const vx=document.getElementById('val-euler-x');
+      const vy=document.getElementById('val-euler-y');
+      if(box&&vx&&vy){ vx.textContent=ultima[2]; vy.textContent=ultima[5]; box.style.display='block'; }
+    },120);
+  }).catch(err=>console.error("Error Euler:",err));
+  actualizarSelectEuler();
+}
+function buscarPorEjercicioEuler(event) {
+  event.preventDefault();
+  const tipo=obtenerTipoEuler();
+  const ej=document.getElementById("ej-euler")?.value;
+  if (!ej) { mostrarNotificacion("Ingrese el número de ejercicio.","warning"); return; }
+  fetch(`/buscar_ejercicio_euler/${tipo}/${ej}`).then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector("#tabla-resultados-euler tbody");
+    tbody.innerHTML="";
+    if (!Array.isArray(data)||!data.length) { tbody.innerHTML="<tr><td colspan='7' style='text-align:center;color:var(--text-muted);'>Sin resultados.</td></tr>"; return; }
+    data.forEach(row=>{
+      const tr=document.createElement("tr");
+      [row.ejercicio,row.iteracion,row.x,row.y,row.fxy,row.y_nuevo,row.ea].forEach(c=>{
+        const td=document.createElement("td"); const n=Number(c);
+        td.textContent=(!isNaN(n)&&c!==null&&c!=='')?(Number.isInteger(n)?n:parseFloat(n.toFixed(8))):c;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    const u=data[data.length-1];
+    const box=document.getElementById('resultado-euler');
+    const vx=document.getElementById('val-euler-x');
+    const vy=document.getElementById('val-euler-y');
+    if(box&&vx&&vy){ vx.textContent=parseFloat(Number(u.x).toFixed(8)); vy.textContent=parseFloat(Number(u.y_nuevo).toFixed(8)); box.style.display='block'; }
+  }).catch(()=>mostrarNotificacion("No se pudo buscar.","error"));
+}
+async function eliminarEjercicioEuler(event) {
+  event.preventDefault();
+  const tipo=obtenerTipoEuler();
+  const ej=document.getElementById("ej-euler")?.value;
+  if (!ej) { mostrarNotificacion("Ingrese el número de ejercicio.","warning"); return; }
+  const ok=await confirmarAccion("Confirmar eliminación",`Se eliminarán los registros del ejercicio #${ej}.`);
+  if (!ok) return;
+  fetch(`/eliminar-euler/${tipo}/${ej}`,{method:"DELETE"}).then(leerRespuestaServidor).then(({ok,payload})=>{
+    if (!ok) throw new Error(payload?.error||"No se pudo eliminar.");
+    mostrarNotificacion(payload?.mensaje||"Eliminado.","success");
+    document.getElementById('resultado-euler').style.display='none';
+    cargarResultadosEuler();
+  }).catch(err=>mostrarNotificacion(err.message||"Error al eliminar.","error"));
+}
+function actualizarEjercicioEuler(event) {
+  event.preventDefault();
+  const tipo=obtenerTipoEuler();
+  const form=document.getElementById("form-euler"); if (!form) return;
+  fetch(`/actualizar-euler/${tipo}`,{method:"POST",body:new FormData(form)}).then(leerRespuestaServidor).then(({ok,payload})=>{
+    if (!ok) throw new Error(payload?.error||"No se pudo actualizar.");
+    mostrarNotificacion(payload?.mensaje||"Actualizado.","success"); cargarResultadosEuler();
+  }).catch(err=>mostrarNotificacion(err.message||"Error al actualizar.","error"));
+}
+const formEuler=document.getElementById("form-euler");
+if (formEuler) {
+  formEuler.addEventListener("submit",event=>{
+    event.preventDefault();
+    const tipo=obtenerTipoEuler();
+    const ep=tipo==="SIM"?"/euler-simple":"/euler-modificado";
+    fetch(ep,{method:"POST",body:new FormData(formEuler)}).then(leerRespuestaServidor).then(({ok,payload})=>{
+      if (!ok) throw new Error(payload?.error||"No se pudo calcular.");
+      mostrarNotificacion(payload?.mensaje||"Cálculo completado.","success");
+      cargarResultadosEuler();
+      if (payload?.imagen) { const f=document.getElementById("grafica-interactiva-euler"); if(f){f.removeAttribute('srcdoc');f.src=payload.imagen+"?t="+Date.now();} }
+    }).catch(err=>mostrarNotificacion(err.message||"Error al calcular.","error"));
+  });
+}
+
+// ══ ROMBERG ══
+function limpiarGraficasRomberg() {
+  ['grafica-romberg-func','grafica-romberg-conv'].forEach(id=>{
+    const f=document.getElementById(id);
+    if(f) f.srcdoc=`<html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100%;background:#161b27;color:#8492a6;font-family:Arial,sans-serif;">Sin datos para mostrar.</body></html>`;
+  });
+}
+function cargarGraficasRomberg() {
+  const ej=document.getElementById('ejercicioSelectRomberg')?.value;
+  if (!ej) { limpiarGraficasRomberg(); return; }
+  const ff=document.getElementById('grafica-romberg-func');
+  const cf=document.getElementById('grafica-romberg-conv');
+  if(ff){ff.removeAttribute('srcdoc');ff.src=`/static/imagenes/romberg_func_${ej}.html?t=${Date.now()}`;}
+  if(cf){cf.removeAttribute('srcdoc');cf.src=`/static/imagenes/romberg_conv_${ej}.html?t=${Date.now()}`;}
+}
+function actualizarSelectRomberg() {
+  fetch('/resultados-romberg').then(r=>r.json()).then(data=>{
+    const ejs=[...new Set((data||[]).map(r=>r[0]))];
+    const sel=document.getElementById('ejercicioSelectRomberg'); if(!sel)return;
+    sel.innerHTML='';
+    ejs.forEach(ej=>{const o=document.createElement('option');o.value=ej;o.textContent=`Ejercicio ${ej}`;sel.appendChild(o);});
+    if(ejs.length){sel.value=ejs[ejs.length-1];cargarGraficasRomberg();}else limpiarGraficasRomberg();
+  });
+}
+function cargarResultadosRomberg() {
+  fetch('/resultados-romberg').then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector("#tabla-resultados-romberg tbody"); if(!tbody)return;
+    tbody.innerHTML="";
+    (data||[]).forEach(fila=>{
+      const tr=document.createElement("tr");
+      fila.forEach(c=>{const td=document.createElement("td");const n=Number(c);
+        td.textContent=(!isNaN(n)&&c!==null&&c!=='')?(Number.isInteger(n)?n:parseFloat(n.toFixed(10))):c;tr.appendChild(td);});
+      tbody.appendChild(tr);
+    });
+  }).catch(err=>console.error("Error Romberg:",err));
+  actualizarSelectRomberg();
+}
+function buscarPorEjercicioRomberg(event) {
+  event.preventDefault();
+  const ej=document.getElementById("ej-rom")?.value;
+  if(!ej){mostrarNotificacion("Ingrese el número de ejercicio.","warning");return;}
+  fetch(`/buscar_ejercicio_romberg/${ej}`).then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector("#tabla-resultados-romberg tbody"); tbody.innerHTML="";
+    if(!Array.isArray(data)||!data.length){tbody.innerHTML="<tr><td colspan='5' style='text-align:center;color:var(--text-muted);'>Sin resultados.</td></tr>";return;}
+    data.forEach(row=>{
+      const tr=document.createElement("tr");
+      [row.ejercicio,row.nivel,row.columna,row.valor,row.ea].forEach(c=>{
+        const td=document.createElement("td");const n=Number(c);
+        td.textContent=(!isNaN(n)&&c!==null&&c!=='')?(Number.isInteger(n)?n:parseFloat(n.toFixed(10))):c;tr.appendChild(td);
+      });tbody.appendChild(tr);
+    });
+  }).catch(()=>mostrarNotificacion("No se pudo buscar.","error"));
+}
+async function eliminarEjercicioRomberg(event) {
+  event.preventDefault();
+  const ej=document.getElementById("ej-rom")?.value;
+  if(!ej){mostrarNotificacion("Ingrese el número de ejercicio.","warning");return;}
+  const ok=await confirmarAccion("Confirmar eliminación",`Se eliminarán los registros del ejercicio #${ej}.`);
+  if(!ok)return;
+  fetch(`/eliminar-romberg/${ej}`,{method:"DELETE"}).then(leerRespuestaServidor).then(({ok,payload})=>{
+    if(!ok)throw new Error(payload?.error||"No se pudo eliminar.");
+    mostrarNotificacion(payload?.mensaje||"Eliminado.","success");
+    document.getElementById('romberg-resultado-box').style.display='none';
+    cargarResultadosRomberg();
+  }).catch(err=>mostrarNotificacion(err.message||"Error al eliminar.","error"));
+}
+function actualizarEjercicioRomberg(event) {
+  event.preventDefault();
+  const form=document.getElementById("form-romberg"); if(!form)return;
+  fetch('/actualizar-romberg',{method:"POST",body:new FormData(form)}).then(leerRespuestaServidor).then(({ok,payload})=>{
+    if(!ok)throw new Error(payload?.error||"No se pudo actualizar.");
+    mostrarNotificacion(payload?.mensaje||"Actualizado.","success"); cargarResultadosRomberg();
+  }).catch(err=>mostrarNotificacion(err.message||"Error al actualizar.","error"));
+}
+const formRomberg=document.getElementById("form-romberg");
+if(formRomberg){
+  formRomberg.addEventListener("submit",event=>{
+    event.preventDefault();
+    fetch('/romberg',{method:"POST",body:new FormData(formRomberg)}).then(leerRespuestaServidor).then(({ok,payload})=>{
+      if(!ok)throw new Error(payload?.error||"No se pudo calcular.");
+      mostrarNotificacion(payload?.mensaje||"Cálculo completado.","success");
+      cargarResultadosRomberg();
+      if(payload?.resultado!==undefined){
+        const box=document.getElementById('romberg-resultado-box');
+        const val=document.getElementById('romberg-resultado-valor');
+        if(box&&val){val.textContent=`I ≈ ${Number(payload.resultado).toFixed(10)}`;box.style.display='block';}
+      }
+      if(payload?.imagen_func){const f=document.getElementById("grafica-romberg-func");if(f){f.removeAttribute('srcdoc');f.src=payload.imagen_func+"?t="+Date.now();}}
+      if(payload?.imagen_conv){const f=document.getElementById("grafica-romberg-conv");if(f){f.removeAttribute('srcdoc');f.src=payload.imagen_conv+"?t="+Date.now();}}
+    }).catch(err=>mostrarNotificacion(err.message||"Error al calcular.","error"));
+  });
+}
+
+// ══ INIT ══
+window.addEventListener('DOMContentLoaded',()=>{
+  if(document.getElementById("form-euler"))   cargarResultadosEuler();
+  if(document.getElementById("form-romberg")) cargarResultadosRomberg();
+});
+</script>
 </body>
 </html>
